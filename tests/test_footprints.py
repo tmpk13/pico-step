@@ -90,3 +90,34 @@ def test_generated_library_is_current():
         fp = make()
         path = ROOT / "lib" / "pico-step.pretty" / f"{fp.name}.kicad_mod"
         assert path.read_text() == fp.render(), f"rerun tools/footprints.py for {fp.name}"
+
+
+def test_tmc2240_symbol_has_every_pin_once():
+    import symbols
+
+    nums = [p.number for p in symbols.tmc2240().pins()]
+    assert sorted(nums, key=int) == [str(n) for n in range(1, 34)]
+
+
+def test_tmc2240_pin_names_match_data_sheet():
+    import symbols
+
+    # TQFN32 pin configuration drawing, TMC2240 data sheet Rev 2.
+    expected = {
+        1: "IREF", 2: "AIN", 3: "VDD1V8", 4: "AGND", 5: "VCC_IO", 6: "ENCN",
+        7: "ENCB", 8: "ENCA", 9: "DRV_ENN", 10: "UART_EN", 11: "DIAG0",
+        12: "DIAG1/SW", 13: "OV", 14: "CPI", 15: "CPO", 16: "VCP", 17: "VS",
+        18: "OUT1B", 19: "OUT2B", 20: "VS", 21: "VS", 22: "OUT2A", 23: "OUT1A",
+        24: "VS", 25: "SLEEPN", 26: "CSN/AD2", 27: "SCK/AD1", 28: "SDI/AD0",
+        29: "SDO/NAO", 30: "CLK", 31: "STEP", 32: "DIR", 33: "GND",
+    }
+    got = {int(p.number): p.name for p in symbols.tmc2240().pins()}
+    assert got == expected
+
+
+def test_symbol_library_is_current():
+    import symbols
+
+    text = (ROOT / "lib" / "pico-step.kicad_sym").read_text()
+    for make in symbols.SYMBOLS:
+        assert symbols.render(make()) in text

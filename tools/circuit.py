@@ -209,23 +209,66 @@ connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.38")  # GPIO26 ADC0
 
 groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13", "C20"]]})
 
-# ---------------------------------------------------------------- TMC2240 I/O
-# RP2040 side of the driver interface. SPI0 on GPIO2..5.
-TMC_IO = {
-    "TMC_SCK": "U1.4",     # GPIO2 SPI0 SCK
-    "TMC_SDI": "U1.5",     # GPIO3 SPI0 TX
-    "TMC_SDO": "U1.6",     # GPIO4 SPI0 RX
-    "TMC_CSN": "U1.7",     # GPIO5 SPI0 CSn
-    "TMC_STEP": "U1.8",    # GPIO6
-    "TMC_DIR": "U1.9",     # GPIO7
-    "TMC_ENN": "U1.11",    # GPIO8
-    "TMC_DIAG0": "U1.12",  # GPIO9
-    "TMC_DIAG1": "U1.28",  # GPIO17
-}
-for net, pin in TMC_IO.items():
-    connect(net, pin)
+# ---------------------------------------------------------------- TMC2240
+# Support parts per TMC2240 data sheet Figure 35 (Standard Application
+# Circuit): 100n at each VS pin pair, 1u VCP to VS, 22n 50V CPI-CPO, 2.2u on
+# VDD1V8, 100n on VCC_IO. RREF 12k gives the widest full-scale range
+# (2.12 A RMS at DRV_CONF=11, Table 18); firmware scales current down.
+C50V = "Capacitor_SMD:C_0603_1608Metric"
+part("U5", "pico-step:TMC2240", "TMC2240", "pico-step:Maxim_TQFN-32-1EP_5x5mm_P0.5mm_T3255-5",
+     MPN="TMC2240ATJ+T", Manufacturer="Analog Devices")
+cap("C21", "100n 50V", C50V)
+cap("C22", "100n 50V", C50V)
+cap("C23", "1u 50V", C0805)
+cap("C24", "22n 50V", C50V)
+cap("C25", "2.2u")
+cap("C26", "100n")
+res("R15", "12k")
+res("R16", "10k")
+res("R17", "10k")
+part("J4", "Connector_Generic:Conn_01x04", "Motor",
+     "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical")
 
-unused_gpio = ["U1.2", "U1.3", "U1.29", "U1.30", "U1.31", "U1.32", "U1.34",
+connect("VM", "U5.17", "U5.20", "U5.21", "U5.24", "C21.1", "C22.1", "C23.1")
+connect("TMC_VCP", "U5.16", "C23.2")
+connect("TMC_CPI", "U5.14", "C24.1")
+connect("TMC_CPO", "U5.15", "C24.2")
+connect("TMC_1V8", "U5.3", "C25.1")
+connect("TMC_IREF", "U5.1", "R15.1")
+connect("+3V3", "U5.5", "C26.1", "R16.1", "R17.1")
+# AIN unused (0..1.25 V input); CLK low selects the internal clock;
+# UART_EN low selects SPI.
+connect("GND", "U5.4", "U5.33", "U5.2", "U5.30", "U5.10",
+        "C21.2", "C22.2", "C25.2", "C26.2", "R15.2")
+connect("OUT1A", "U5.23", "J4.1")
+connect("OUT2A", "U5.22", "J4.2")
+connect("OUT1B", "U5.18", "J4.3")
+connect("OUT2B", "U5.19", "J4.4")
+
+# RP2040 interface: SPI0 on GPIO2..5.
+connect("TMC_SCK", "U1.4", "U5.27")     # GPIO2 SPI0 SCK
+connect("TMC_SDI", "U1.5", "U5.28")     # GPIO3 SPI0 TX
+connect("TMC_SDO", "U1.6", "U5.29")     # GPIO4 SPI0 RX
+connect("TMC_CSN", "U1.7", "U5.26")     # GPIO5 SPI0 CSn
+connect("TMC_STEP", "U1.8", "U5.31")    # GPIO6
+connect("TMC_DIR", "U1.9", "U5.32")     # GPIO7
+connect("TMC_ENN", "U1.11", "U5.9")     # GPIO8, internal pull-up: off at reset
+connect("TMC_DIAG0", "U1.12", "U5.11", "R16.2")  # GPIO9
+connect("TMC_DIAG1", "U1.28", "U5.12", "R17.2")  # GPIO17
+# SLEEPN has an internal pull-down, so the driver sleeps until firmware
+# raises GPIO18.
+connect("TMC_SLEEPN", "U1.29", "U5.25")  # GPIO18
+# The angle sensor's IIF outputs also feed the driver's encoder inputs, so
+# firmware can switch the TLE5012B to IIF and let the TMC2240 count.
+connect("ENC_IFA", "U5.8")
+connect("ENC_IFB", "U5.7")
+connect("ENC_IFC", "U5.6")
+
+groups.append({"name": "driver", "stages": [
+    ["R16", "R17", "C26"], ["U5"], ["C21", "C22", "C23", "C24", "C25", "R15"], ["J4"],
+]})
+
+unused_gpio = ["U1.2", "U1.3", "U1.30", "U1.31", "U1.32", "U1.34",
                "U1.35", "U1.36", "U1.39", "U1.40", "U1.41"]
 
 circuit = {
@@ -235,7 +278,7 @@ circuit = {
     "nets": [{"name": n, "pins": p} for n, p in nets.items()],
     "groups": groups,
     "power": {"VBUS": {"style": "label"}, "VM": {"style": "label"}},
-    "no_connect": ["J1.A8", "J1.B8", "U2.4", *unused_gpio],
+    "no_connect": ["J1.A8", "J1.B8", "U2.4", "U5.13", *unused_gpio],
 }
 
 json.dump(circuit, sys.stdout, indent=1)

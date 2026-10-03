@@ -13,9 +13,15 @@ run = "uv pip install pytest"
 description = "Generate project footprints into lib/pico-step.pretty"
 run = "python tools/footprints.py"
 
+[tasks.symbols]
+description = "Generate project symbols into lib/pico-step.kicad_sym"
+run = "python tools/symbols.py"
+
 [tasks.sch]
 description = "Regenerate pico-step.kicad_sch from tools/circuit.py"
-depends = ["footprints"]
+depends = ["footprints", "symbols"]
+# kicad-vis searches KICAD9_SYMBOL_DIR after its own KiCad 10 library.
+env = { KICAD9_SYMBOL_DIR = "{{config_root}}/lib" }
 run = [
     "mkdir -p build",
     "python tools/circuit.py > build/circuit.json",

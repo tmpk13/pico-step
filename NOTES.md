@@ -29,3 +29,27 @@ every circuit pin exists as a pad on the named footprint and vice versa.
 ## Power
 Logic is USB powered (VBUS -> AP2112K-3.3). Motor supply VM enters on J2 and
 is not tied to VBUS; VM_SENSE (100k/10k, 36 V -> 3.27 V) lets firmware see it.
+
+## TMC2240 TQFN32 pin table
+pdftotext of the Pin Description table shifts the TSSOP38 column into the
+TQFN32 column for PGND ("27, 31"), which would collide with SCK and STEP.
+The TQFN pin configuration drawing settles it: the TQFN has no PGND pins,
+ground is AGND (4) plus the exposed pad. Symbol pins are tested against the
+drawing in `tests/test_footprints.py`.
+
+## TMC2240 pin strapping
+- CLK (30) to GND: internal clock. UART_EN (10) to GND: SPI. AIN (2) to GND.
+- SLEEPN (25) on GPIO18. Its internal pull-down keeps the driver asleep
+  while the RP2040 is in reset; register contents are lost in sleep.
+- DRV_ENN (9) has an internal pull-up, so outputs are off until firmware
+  drives GPIO8 low.
+- DIAG0/DIAG1 get 10k pull-ups so open-drain mode works.
+- OV (13) left open: no brake chopper.
+- ENCA/ENCB/ENCN share the TLE5012B IFA/IFB/IFC nets with GPIO14..16, so the
+  sensor can be switched to IIF and counted by the driver directly.
+
+## TMC2240 package
+DigiKey describes it only as "TQFN"; the data sheet says TQFN32 5x5,
+package code T3255+5C. KiCad ships T3255-3/-6/-9 patterns but not -5, and
+they differ only in the exposed pad. The project copy uses T3255-3 until
+21-0140 is checked.

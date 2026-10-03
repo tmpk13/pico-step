@@ -17,11 +17,16 @@ classDiagram
         BOOTSEL, RESET, SWD J3
         LED GPIO25
     }
-    class TMC2240 {
+    class TMC2240_U5 {
         SPI0 GPIO2..5
         STEP GPIO6, DIR GPIO7
         ENN GPIO8, DIAG0 GPIO9, DIAG1 GPIO17
-        not yet placed
+        SLEEPN GPIO18
+        ENCA/B/N from TLE5012B IFA/IFB/IFC
+        RREF 12k
+    }
+    class Motor_J4 {
+        OUT1A OUT2A OUT1B OUT2B
     }
     class TLE5012B_U3 {
         SSC on SPI1
@@ -38,8 +43,10 @@ classDiagram
     USB_C_J1 --> RP2040_U1 : USB 27R series
     LDO_U2 --> RP2040_U1 : +3V3
     LDO_U2 --> TLE5012B_U3 : +3V3
-    RP2040_U1 --> TMC2240 : SPI0 + STEP/DIR
+    RP2040_U1 --> TMC2240_U5 : SPI0 + STEP/DIR
     TLE5012B_U3 --> RP2040_U1 : angle (SSC)
-    MotorSupply_J2 --> TMC2240 : VM
+    MotorSupply_J2 --> TMC2240_U5 : VM
+    TLE5012B_U3 --> TMC2240_U5 : IIF encoder
+    TMC2240_U5 --> Motor_J4 : coils
     MotorSupply_J2 --> RP2040_U1 : VM_SENSE
 ```

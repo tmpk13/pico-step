@@ -8,6 +8,7 @@ Run from the project root: python3 tools/footprints.py
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -207,12 +208,27 @@ STOCK_COPIES = [
         "Connector_USB.pretty/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal",
         "USB_C_Receptacle_GCT_USB4105-xx-A_16P_SH",
         {"S1": "SH"},
+        None,
+    ),
+    # TMC2240 TQFN32 is Maxim package T3255+5C (outline 21-0140, land
+    # pattern 90-0013); the TMC2240 data sheet references those drawings but
+    # does not include them. All T3255 variants share the 0.5 mm perimeter
+    # pads; only the exposed pad differs. This copies the T3255-3 pattern
+    # (3.1 mm exposed pad) until the T3255-5 exposed pad size is confirmed.
+    (
+        "Package_DFN_QFN.pretty/TQFN-32-1EP_5x5mm_P0.5mm_EP3.1x3.1mm_ThermalVias",
+        "Maxim_TQFN-32-1EP_5x5mm_P0.5mm_T3255-5",
+        {},
+        "Maxim T3255-5 TQFN-32 5x5mm P0.5mm for TMC2240. PROVISIONAL: copied from "
+        "T3255-3 (EP 3.1x3.1mm); verify exposed pad against Maxim 21-0140 / 90-0013",
     ),
 ]
 
 
-def copy_stock(src: str, name: str, renumber: dict[str, str]) -> str:
+def copy_stock(src: str, name: str, renumber: dict[str, str], descr: str | None) -> str:
     text = (STOCK_FP_DIR / f"{src}.kicad_mod").read_text()
+    if descr:
+        text = re.sub(r'\(descr "[^"]*"\)', f'(descr "{descr}")', text, count=1)
     old = src.split("/")[-1]
     text = text.replace(f'(footprint "{old}"', f'(footprint "{name}"', 1)
     text = text.replace(f'(property "Value" "{old}"', f'(property "Value" "{name}"', 1)
@@ -224,7 +240,7 @@ def copy_stock(src: str, name: str, renumber: dict[str, str]) -> str:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     outputs = [(fp.name, fp.render()) for fp in (make() for make in FOOTPRINTS)]
-    outputs += [(name, copy_stock(src, name, ren)) for src, name, ren in STOCK_COPIES]
+    outputs += [(name, copy_stock(src, name, ren, d)) for src, name, ren, d in STOCK_COPIES]
     for name, text in outputs:
         path = OUT_DIR / f"{name}.kicad_mod"
         path.write_text(text)

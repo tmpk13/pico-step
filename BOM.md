@@ -8,7 +8,8 @@
 | U4 | W25Q128JVSIQ | Winbond | Package_SO:SOIC-8_5.3x5.3mm_P1.27mm | 46429 | $3.60 @1 |
 | Y1 | ABM8-272-T3 (12 MHz, CL 10 pF) | Abracon | Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm | 28279 | $0.42 @3000 reel |
 | J1 | USB4105-GF-A | GCT | pico-step:USB_C_Receptacle_GCT_USB4105-xx-A_16P_SH | 116353 | $0.50 @800 reel |
-| (pending) | TMC2240ATJ+T (TQFN-36) | Analog Devices | not yet made | 1465 | $8.90 @1 |
+| U5 | TMC2240ATJ+T (TQFN-32 5x5, T3255+5C) | Analog Devices | pico-step:Maxim_TQFN-32-1EP_5x5mm_P0.5mm_T3255-5 (provisional EP) | 1465 | $8.90 @1 |
+| J4 | JST B4B-XH-A (motor) | JST | Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical | not searched | |
 
 Notes:
 - W25Q16JVSSIQ was the first flash choice; DigiKey lists it Obsolete.
