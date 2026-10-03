@@ -1,0 +1,11 @@
+.venv/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+pico-step-backups/
+*.kicad_prl
+*-bak
+fp-info-cache
+\#auto_saved_files#
+~*.lck

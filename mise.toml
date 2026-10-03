@@ -1,0 +1,38 @@
+[tools]
+python = "3.13"
+uv = "latest"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.install]
+description = "Install test dependencies into the project venv"
+run = "uv pip install pytest"
+
+[tasks.footprints]
+description = "Generate project footprints into lib/pico-step.pretty"
+run = "python tools/footprints.py"
+
+[tasks.sch]
+description = "Regenerate pico-step.kicad_sch from tools/circuit.py"
+depends = ["footprints"]
+run = [
+    "mkdir -p build",
+    "python tools/circuit.py > build/circuit.json",
+    "kicad-vis layout build/circuit.json -o pico-step.kicad_sch --json > build/layout.json",
+    "python -c \"import json,sys;d=json.load(open('build/layout.json'));print('ok',d['ok'],d.get('stats'));sys.exit(0 if d['ok'] else 1)\"",
+    "python ~/.claude/skills/kicad-schematic/fixjustify.py pico-step.kicad_sch",
+    "python tools/set_erc.py",
+]
+
+[tasks.render]
+description = "Render the schematic to build/pico-step.png"
+run = "kicad-vis render pico-step.kicad_sch -o build/pico-step.png"
+
+[tasks.erc]
+description = "Run KiCad ERC on the schematic"
+run = "kicad-cli sch erc --severity-error --exit-code-violations -o build/erc.rpt pico-step.kicad_sch"
+
+[tasks.test]
+description = "Run tests"
+run = "pytest -q --tb=short tests"
