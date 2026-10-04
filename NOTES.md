@@ -110,3 +110,8 @@ ohm at 5 GHz, harmonics below -35 dB). 0201 parts per the guidelines.
   net, kicad-vis draws a straight wire and drops the net name onto the far
   part's pin names. GPIO8 got the LED for that reason (STEP/DIR on GPIO8
   overlapped U5's STEP/DIR names).
+
+## DigiKey list
+- eparts-search returns the reel (TR) variant of most passives; use the MPN in
+  the DigiKey list upload so packaging can be chosen there.
+- Two first-choice Murata MPNs were obsolete (100n 50V 0603, 10u 0805); alternates are in DIGIKEY.md.
