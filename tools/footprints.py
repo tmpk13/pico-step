@@ -194,7 +194,32 @@ def pg_dso_8() -> Footprint:
     )
 
 
-FOOTPRINTS = [pg_dso_8]
+def murata_lfd18() -> Footprint:
+    # Murata LFD182G45DCHD481 specification No.CD481-01, section 3 "Land
+    # Pattern": six 0.25 x 0.5 mm lands at 0.5 mm pitch, rows 0.2..0.7 mm off
+    # the center line. Terminals 4 and 8 (NC, body ends) get no land.
+    # The drawing shows terminal 1 top right with the body horizontal; this
+    # copy is turned 90 degrees counter-clockwise so terminal 1 is top left:
+    # 1, 2, 3 down the left column, 5, 6, 7 up the right one.
+    pads = [
+        Pad("1", -0.45, -0.5, 0.5, 0.25),
+        Pad("2", -0.45, 0.0, 0.5, 0.25),
+        Pad("3", -0.45, 0.5, 0.5, 0.25),
+        Pad("5", 0.45, 0.5, 0.5, 0.25),
+        Pad("6", 0.45, 0.0, 0.5, 0.25),
+        Pad("7", 0.45, -0.5, 0.5, 0.25),
+    ]
+    return Footprint(
+        name="Murata_LFD182G45DCHD481",
+        descr="Murata LFD182G45DCHD481 dual-band diplexer 1.6x0.8mm, land pattern per spec CD481-01",
+        tags="Murata LFD18 diplexer 0603",
+        body_w=0.8,
+        body_h=1.6,
+        pads=pads,
+    )
+
+
+FOOTPRINTS = [pg_dso_8, murata_lfd18]
 
 STOCK_FP_DIR = Path("/usr/share/kicad/footprints")
 

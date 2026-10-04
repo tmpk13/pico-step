@@ -20,8 +20,10 @@ nets: dict[str, list[str]] = {}
 groups: list[dict] = []
 
 
-def part(ref, lib_id, value, footprint, **fields):
+def part(ref, lib_id, value, footprint, dnp=False, **fields):
     c = {"ref": ref, "lib_id": lib_id, "value": value, "footprint": footprint}
+    if dnp:
+        c["dnp"] = True
     if fields:
         c["fields"] = fields
     components.append(c)
@@ -67,106 +69,157 @@ connect("+3V3", "U2.5", "C2.1")
 
 groups.append({"name": "usb_power", "stages": [["J1"], ["R1", "R2", "C1"], ["U2"], ["C2"]]})
 
-# ---------------------------------------------------------------- RP2040 core
+# ---------------------------------------------------------------- ESP32-C5 core
+# Support parts follow the ESP32-C5 Hardware Design Guidelines reference
+# schematic (Fig. 1). The HF4 carries 4 MB flash in the package, so there is
+# no external flash and pins 26..32 are NC.
+C0201 = "Capacitor_SMD:C_0201_0603Metric"
+L0201 = "Inductor_SMD:L_0201_0603Metric"
+L0402 = "Inductor_SMD:L_0402_1005Metric"
+
+
+def ind(ref, value, footprint=L0201):
+    return part(ref, "Device:L", value, footprint)
+
+
 part(
-    "U1", "MCU_RaspberryPi:RP2040", "RP2040",
-    "Package_DFN_QFN:QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm",
-    MPN="SC0914(13)", Manufacturer="Raspberry Pi",
+    "U1", "pico-step:ESP32-C5HF4", "ESP32-C5HF4",
+    "Package_DFN_QFN:QFN-48-1EP_6x6mm_P0.4mm_EP4.66x4.66mm_ThermalVias",
+    MPN="ESP32-C5HF4", Manufacturer="Espressif Systems",
 )
-res("R3", "27")
-res("R4", "27")
+
+# USB Serial/JTAG on GPIO13 (D-) / GPIO14 (D+), 22R series per the guidelines.
+res("R3", "22")
+res("R4", "22")
 connect("USB_C_DP", "R3.1")
 connect("USB_C_DM", "R4.1")
-connect("USB_DP", "R3.2", "U1.47")
-connect("USB_DM", "R4.2", "U1.46")
+connect("USB_DP", "R3.2", "U1.23")
+connect("USB_DM", "R4.2", "U1.22")
 
-iovdd = ["U1.1", "U1.10", "U1.22", "U1.33", "U1.42", "U1.49"]
-decoup = []
-for i, pin in enumerate(iovdd):
-    decoup.append(cap(f"C{3 + i}", "100n"))
-cap("C9", "100n")    # USB_VDD
-cap("C10", "100n")   # ADC_AVDD
-cap("C11", "1u")     # VREG_VIN
-cap("C12", "1u")     # VREG_VOUT
-cap("C13", "100n")   # DVDD pin 23
-cap("C14", "100n")   # DVDD pin 50
-connect("+3V3", *iovdd, "U1.48", "U1.43", "U1.44",
-        *(f"{c}.1" for c in decoup), "C9.1", "C10.1", "C11.1")
-connect("+1V1", "U1.45", "U1.23", "U1.50", "C12.1", "C13.1", "C14.1")
-connect("GND", "U1.57", "U1.19",
-        *(f"{c}.2" for c in decoup), "C9.2", "C10.2", "C11.2",
-        "C12.2", "C13.2", "C14.2")
+# Supply decoupling, one entry per pin group as in the reference schematic.
+cap("C3", "10u", C0805)   # VDDA6/VDDA7 (TX current step)
+cap("C4", "0.8p", C0201)  # VDDA6/VDDA7 RF bypass
+cap("C5", "0.3p", C0201)  # VDDA6/VDDA7 RF bypass
+cap("C6", "1u")           # VDDA8
+cap("C7", "1u")           # VDDPST1
+cap("C8", "100n")         # VDDPST2
+cap("C9", "1u")           # VDDA5
+cap("C10", "10n")         # VDDA3/VDDA4
+cap("C11", "100n")        # VDDA3/VDDA4
+cap("C12", "100n")        # VDDPST3
+# VDDA1/VDDA2 get an LC filter against PA harmonics; the inductor must
+# carry the RF supply current (500 mA rating).
+cap("C13", "2.6p", C0201)  # chip side of L1
+ind("L1", "2.0nH 500mA")
+cap("C14", "3.0p", C0201)
+cap("C15", "100n")
+cap("C16", "10u", C0805)
+decoup = [f"C{n}" for n in range(3, 17)]
+connect("+3V3", "U1.1", "U1.3", "U1.6", "U1.8", "U1.24", "U1.46",
+        "U1.44", "U1.45", "U1.39", "L1.2",
+        *(f"{c}.1" for c in decoup if c != "C13"))
+connect("VDDA12", "U1.40", "U1.41", "C13.1", "L1.1")
+connect("GND", "U1.2", "U1.43", "U1.47", "U1.49", *(f"{c}.2" for c in decoup))
 
-# 12 MHz crystal: ABM8-272-T3 (CL 10 pF), 15 pF loads, 1k on XOUT.
+# 48 MHz crystal (the only frequency the firmware supports), +-10 ppm.
+# FL4800069: CL 8 pF, so 10 pF loads with ~3 pF stray; trim after a
+# frequency-offset test. The series inductor on XTAL_P keeps crystal
+# harmonics out of the RF band (24 nH initial value per the guidelines).
 part(
-    "Y1", "Device:Crystal_GND24", "12MHz",
+    "Y1", "Device:Crystal_GND24", "48MHz",
     "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm",
-    MPN="ABM8-272-T3", Manufacturer="Abracon",
+    MPN="FL4800069", Manufacturer="Diodes Incorporated",
 )
-cap("C15", "15p")
-cap("C16", "15p")
-res("R5", "1k")
-connect("XIN", "U1.20", "Y1.1", "C15.1")
-connect("XOUT", "U1.21", "R5.1")
-connect("XTAL_OUT", "R5.2", "Y1.3", "C16.1")
-connect("GND", "Y1.2", "Y1.4", "C15.2", "C16.2")
+ind("L2", "24nH", L0402)
+cap("C27", "10p")
+cap("C28", "10p")
+connect("XTAL_P", "U1.5", "L2.1")
+connect("XTAL_IN", "L2.2", "Y1.1", "C27.1")
+connect("XTAL_N", "U1.4", "Y1.3", "C28.1")
+connect("GND", "Y1.2", "Y1.4", "C27.2", "C28.2")
 
-# QSPI flash
-part(
-    "U4", "Memory_Flash:W25Q128JVS", "W25Q128JVS",
-    "Package_SO:SOIC-8_5.3x5.3mm_P1.27mm",
-    MPN="W25Q128JVSIQ", Manufacturer="Winbond",
-)
-cap("C17", "100n")
-connect("QSPI_SS", "U1.56", "U4.1")
-connect("QSPI_SCLK", "U1.52", "U4.6")
-connect("QSPI_SD0", "U1.53", "U4.5")
-connect("QSPI_SD1", "U1.55", "U4.2")
-connect("QSPI_SD2", "U1.54", "U4.3")
-connect("QSPI_SD3", "U1.51", "U4.7")
-connect("+3V3", "U4.8", "C17.1")
-connect("GND", "U4.4", "C17.2")
-
-# BOOTSEL pulls QSPI_SS low through 1k; RESET pulls RUN low.
+# CHIP_PU: 10k / 1u delays enable until the 3V3 rail settles (tSTBL); RESET
+# shorts the capacitor. BOOT holds GPIO28 low through reset for download
+# mode; GPIO27 must read high then, which its internal pull-up and the
+# TMC2240 DRV_ENN pull-up guarantee.
 SW = "Button_Switch_SMD:SW_SPST_PTS810"
-res("R6", "1k")
-part("SW1", "Switch:SW_Push", "BOOTSEL", SW)
 res("R7", "10k")
+cap("C17", "1u")
 part("SW2", "Switch:SW_Push", "RESET", SW)
-connect("QSPI_SS", "R6.1")
-connect("BOOTSEL", "R6.2", "SW1.1")
-connect("RUN", "U1.26", "R7.2", "SW2.1")
-connect("+3V3", "R7.1")
-connect("GND", "SW1.2", "SW2.2")
+res("R6", "10k")
+part("SW1", "Switch:SW_Push", "BOOT", SW)
+connect("CHIP_PU", "U1.7", "R7.2", "C17.1", "SW2.1")
+connect("BOOT", "U1.38", "R6.2", "SW1.1")    # GPIO28
+connect("+3V3", "R7.1", "R6.1")
+connect("GND", "C17.2", "SW1.2", "SW2.2")
 
-# SWD header
-part("J3", "Connector_Generic:Conn_01x03", "SWD",
+# UART0 header for ROM log and download; 499R on U0TXD suppresses harmonics.
+res("R5", "499")
+part("J3", "Connector_Generic:Conn_01x03", "UART",
      "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
-connect("SWCLK", "U1.24", "J3.1")
+connect("U0TXD", "U1.20", "R5.1")
+connect("UART_TX", "R5.2", "J3.1")
 connect("GND", "J3.2")
-connect("SWDIO", "U1.25", "J3.3")
+connect("UART_RX", "U1.21", "J3.3")
 
-# Status LED on GPIO25
+# Status LED on GPIO8.
 res("R8", "330")
 part("D1", "Device:LED", "LED", "LED_SMD:LED_0603_1608Metric")
-connect("LED", "U1.37", "R8.1")
+connect("LED", "U1.17", "R8.1")
 connect("LED_A", "R8.2", "D1.2")
 connect("GND", "D1.1")
 
 groups.append({"name": "mcu", "stages": [
     ["R3", "R4"],
-    ["Y1", "C15", "C16", "R5"],
+    ["Y1", "C27", "C28"],
+    ["L2"],
     ["U1"],
-    ["U4", "C17", "R6", "SW1", "R7", "SW2", "J3", "R8", "D1"],
+    ["R7", "C17", "SW2", "R6", "SW1", "R5", "J3", "R8", "D1"],
 ]})
-groups.append({"name": "decoupling", "members": [
-    *decoup, "C9", "C10", "C11", "C12", "C13", "C14",
+groups.append({"name": "decoupling", "members": [*decoup, "L1"]})
+
+# ---------------------------------------------------------------- RF
+# Per the guidelines: a CLC match at each chip RF port, a dual-band diplexer
+# to one 50 ohm port, and a CLC footprint at the antenna. Chip-side values
+# are mid-range starting points from the guidelines' recommended ranges
+# (2.4 GHz: 1.2..3.0 pF / 2.0..3.0 nH, 5 GHz: 0.2..1.5 pF / 0..3 nH); all
+# of them must be tuned on the finished board with a network analyzer.
+part("FL1", "pico-step:LFD182G45DCHD481", "LFD182G45DCHD481",
+     "pico-step:Murata_LFD182G45DCHD481",
+     MPN="LFD182G45DCHD481", Manufacturer="Murata Electronics")
+cap("C29", "2.0p", C0201)
+ind("L3", "2.4nH")
+cap("C30", "2.0p", C0201)
+cap("C31", "0.8p", C0201)   # needs a short stub to the ground pad
+ind("L4", "1.5nH")
+cap("C32", "0.8p", C0201)
+part("C33", "Device:C", "DNP", C0201, dnp=True)
+part("R18", "Device:R", "0", "Resistor_SMD:R_0201_0603Metric")
+part("C34", "Device:C", "DNP", C0201, dnp=True)
+part("J5", "Connector:Conn_Coaxial", "ANT",
+     "Connector_Coaxial:U.FL_Hirose_U.FL-R-SMT-1_Vertical",
+     MPN="U.FL-R-SMT-1(10)", Manufacturer="Hirose")
+connect("ANT_2G", "U1.42", "C29.1", "L3.1")
+connect("RF_2G", "L3.2", "C30.1", "FL1.3")
+connect("ANT_5G", "U1.48", "C31.1", "L4.1")
+connect("RF_5G", "L4.2", "C32.1", "FL1.1")
+connect("RF_COM", "FL1.6", "C33.1", "R18.1")
+connect("RF_ANT", "R18.2", "C34.1", "J5.1")
+connect("GND", "FL1.2", "FL1.5", "FL1.7", "J5.2",
+        "C29.2", "C30.2", "C31.2", "C32.2", "C33.2", "C34.2")
+
+groups.append({"name": "rf", "stages": [
+    ["C29", "C31"], ["L3", "L4"], ["C30", "C32"], ["FL1"],
+    ["C33"], ["R18"], ["C34"], ["J5"],
 ]})
 
 # ---------------------------------------------------------------- TLE5012B
 # SSC per data sheet Figure 11: 100R on SCK and CSQ, 470R on DATA. The
-# RP2040 SPI TX cannot tri-state, so it joins the DATA node through 4.7k
-# and loses any contention with the sensor; RX reads the node directly.
+# sensor shares the SPI bus with the TMC2240 (the ESP32-C5 has one general
+# purpose SPI host). DATA sits on MOSI: in 3-wire half-duplex mode the SPI
+# host tri-states MOSI for the read phase, which is the bidirectional
+# master Figure 11 asks for. Both slaves release their outputs while
+# deselected.
 part(
     "U3", "Sensor_Magnetic:TLE5012B", "TLE5012BE5000",
     "pico-step:Infineon_PG-DSO-8",
@@ -176,22 +229,20 @@ cap("C18", "100n")
 res("R9", "100")
 res("R10", "100")
 res("R11", "470")
-res("R14", "4.7k")
 connect("+3V3", "U3.6", "C18.1")
 connect("GND", "U3.7", "C18.2")
-connect("ENC_SCK", "U1.13", "R9.1")       # GPIO10 SPI1 SCK
+connect("SPI_SCK", "U1.15", "R9.1")       # GPIO6, FSPICLK
 connect("ENC_SCK_S", "R9.2", "U3.2")
-connect("ENC_CSQ", "U1.16", "R10.1")      # GPIO13 SPI1 CSn
+connect("ENC_CSQ", "U1.33", "R10.1")      # GPIO23
 connect("ENC_CSQ_S", "R10.2", "U3.3")
-connect("ENC_TX", "U1.14", "R14.1")       # GPIO11 SPI1 TX
-connect("ENC_DATA", "U1.15", "R14.2", "R11.1")  # GPIO12 SPI1 RX
+connect("SPI_MOSI", "U1.16", "R11.1")     # GPIO7, FSPID
 connect("ENC_DATA_S", "R11.2", "U3.4")
-connect("ENC_IFA", "U1.17", "U3.5")       # GPIO14, PWM output in E5000
-connect("ENC_IFB", "U1.18", "U3.8")       # GPIO15
-connect("ENC_IFC", "U1.27", "U3.1")       # GPIO16
+connect("ENC_IFA", "U1.13", "U3.5")       # GPIO4, PWM output in E5000
+connect("ENC_IFB", "U1.14", "U3.8")       # GPIO5
+connect("ENC_IFC", "U1.9", "U3.1")        # GPIO0
 
 groups.append({"name": "encoder", "stages": [
-    ["R9", "R10", "R14", "R11"], ["U3", "C18"],
+    ["R9", "R10", "R11"], ["U3", "C18"],
 ]})
 
 # ---------------------------------------------------------------- motor supply
@@ -205,7 +256,7 @@ res("R13", "10k")
 cap("C20", "100n")
 connect("VM", "J2.1", "C19.1", "R12.1")
 connect("GND", "J2.2", "C19.2", "R13.2", "C20.2")
-connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.38")  # GPIO26 ADC0
+connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.10")  # GPIO1 ADC1_CH0
 
 groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13", "C20"]]})
 
@@ -245,19 +296,24 @@ connect("OUT2A", "U5.22", "J4.2")
 connect("OUT1B", "U5.18", "J4.3")
 connect("OUT2B", "U5.19", "J4.4")
 
-# RP2040 interface: SPI0 on GPIO2..5.
-connect("TMC_SCK", "U1.4", "U5.27")     # GPIO2 SPI0 SCK
-connect("TMC_SDI", "U1.5", "U5.28")     # GPIO3 SPI0 TX
-connect("TMC_SDO", "U1.6", "U5.29")     # GPIO4 SPI0 RX
-connect("TMC_CSN", "U1.7", "U5.26")     # GPIO5 SPI0 CSn
-connect("TMC_STEP", "U1.8", "U5.31")    # GPIO6
-connect("TMC_DIR", "U1.9", "U5.32")     # GPIO7
-connect("TMC_ENN", "U1.11", "U5.9")     # GPIO8, internal pull-up: off at reset
-connect("TMC_DIAG0", "U1.12", "U5.11", "R16.2")  # GPIO9
-connect("TMC_DIAG1", "U1.28", "U5.12", "R17.2")  # GPIO17
+# ESP32-C5 interface: SPI bus shared with the TLE5012B.
+connect("SPI_SCK", "U5.27")
+connect("SPI_MOSI", "U5.28")
+connect("SPI_MISO", "U1.11", "U5.29")   # GPIO2, FSPIQ
+connect("TMC_CSN", "U1.19", "U5.26")    # GPIO10, FSPICS0
+connect("TMC_STEP", "U1.18", "U5.31")   # GPIO9
+# GPIO26 is a boot-mode strap, but it only matters when GPIO27 is low.
+connect("TMC_DIR", "U1.36", "U5.32")    # GPIO26
+# DRV_ENN has an internal pull-up, so outputs stay off until firmware drives
+# GPIO27 low; the same pull-up holds the GPIO27 strap high for download mode.
+connect("TMC_ENN", "U1.37", "U5.9")     # GPIO27
+# DIAG0 is pulled low while the driver is in reset, so it stays off the
+# boot-mode strapping pins.
+connect("TMC_DIAG0", "U1.34", "U5.11", "R16.2")  # GPIO24
+connect("TMC_DIAG1", "U1.35", "U5.12", "R17.2")  # GPIO25
 # SLEEPN has an internal pull-down, so the driver sleeps until firmware
-# raises GPIO18.
-connect("TMC_SLEEPN", "U1.29", "U5.25")  # GPIO18
+# raises GPIO3.
+connect("TMC_SLEEPN", "U1.12", "U5.25")  # GPIO3
 # The angle sensor's IIF outputs also feed the driver's encoder inputs, so
 # firmware can switch the TLE5012B to IIF and let the TMC2240 count.
 connect("ENC_IFA", "U5.8")
@@ -268,8 +324,9 @@ groups.append({"name": "driver", "stages": [
     ["R16", "R17", "C26"], ["U5"], ["C21", "C22", "C23", "C24", "C25", "R15"], ["J4"],
 ]})
 
-unused_gpio = ["U1.2", "U1.3", "U1.30", "U1.31", "U1.32", "U1.34",
-               "U1.35", "U1.36", "U1.39", "U1.40", "U1.41"]
+# GPIO15 (SPICS1) is the in-package PSRAM select on other variants; the data
+# sheet advises against general use. Pins 26..32 are NC on the HF4.
+unused_mcu = ["U1.25", *(f"U1.{n}" for n in range(26, 33))]
 
 circuit = {
     "version": 1,
@@ -277,8 +334,9 @@ circuit = {
     "components": components,
     "nets": [{"name": n, "pins": p} for n, p in nets.items()],
     "groups": groups,
-    "power": {"VBUS": {"style": "label"}, "VM": {"style": "label"}},
-    "no_connect": ["J1.A8", "J1.B8", "U2.4", "U5.13", *unused_gpio],
+    "power": {"VBUS": {"style": "label"}, "VM": {"style": "label"},
+              "VDDA12": {"style": "label"}},
+    "no_connect": ["J1.A8", "J1.B8", "U2.4", "U5.13", *unused_mcu],
 }
 
 json.dump(circuit, sys.stdout, indent=1)

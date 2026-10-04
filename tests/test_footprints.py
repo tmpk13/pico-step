@@ -121,3 +121,98 @@ def test_symbol_library_is_current():
     text = (ROOT / "lib" / "pico-step.kicad_sym").read_text()
     for make in symbols.SYMBOLS:
         assert symbols.render(make()) in text
+
+
+def test_esp32_c5hf4_symbol_has_every_pin_once():
+    import symbols
+
+    nums = [p.number for p in symbols.esp32_c5hf4().pins()]
+    assert sorted(nums, key=int) == [str(n) for n in range(1, 50)]
+
+
+def test_esp32_c5hf4_pin_names_match_data_sheet():
+    import symbols
+
+    # ESP32-C5 Series Datasheet v1.5, Figure 2-2 (HF4 pin layout); GPIO
+    # numbers from Table 2-3. The symbol prefixes the GPIO number where the
+    # drawing shows a function name.
+    expected = {
+        1: "VDDA6", 2: "GND", 3: "VDDA7", 4: "XTAL_N", 5: "XTAL_P", 6: "VDDA8",
+        7: "CHIP_PU", 8: "VDDPST1", 9: "GPIO0/XTAL_32K_P", 10: "GPIO1/XTAL_32K_N",
+        11: "GPIO2/MTMS", 12: "GPIO3/MTDI", 13: "GPIO4/MTCK", 14: "GPIO5/MTDO",
+        15: "GPIO6", 16: "GPIO7", 17: "GPIO8", 18: "GPIO9", 19: "GPIO10",
+        20: "GPIO11/U0TXD", 21: "GPIO12/U0RXD", 22: "GPIO13/USB_D-",
+        23: "GPIO14/USB_D+", 24: "VDDPST2", 25: "GPIO15/SPICS1",
+        **{n: "NC" for n in range(26, 33)},
+        33: "GPIO23", 34: "GPIO24", 35: "GPIO25", 36: "GPIO26", 37: "GPIO27",
+        38: "GPIO28", 39: "VDDPST3", 40: "VDDA1", 41: "VDDA2", 42: "ANT_2G",
+        43: "GND", 44: "VDDA3", 45: "VDDA4", 46: "VDDA5", 47: "GND",
+        48: "ANT_5G", 49: "GND",
+    }
+    got = {int(p.number): p.name for p in symbols.esp32_c5hf4().pins()}
+    assert got == expected
+
+
+def test_diplexer_symbol_matches_murata_terminals():
+    import symbols
+
+    # Murata spec CD481-01 Terminal Configuration; 4 and 8 are NC with no land.
+    expected = {1: "P1_HF", 2: "GND", 3: "P2_LF", 5: "GND", 6: "P3_COM", 7: "GND"}
+    got = {int(p.number): p.name for p in symbols.lfd182g45dchd481().pins()}
+    assert got == expected
+
+
+def test_diplexer_land_pattern_matches_murata():
+    fp = footprints.murata_lfd18()
+    by_num = {p.number: p for p in fp.pads}
+    assert sorted(by_num) == ["1", "2", "3", "5", "6", "7"]
+    # 0.25 x 0.5 mm lands (turned 90 degrees), 0.5 mm pitch, land rows
+    # 0.2..0.7 mm either side of the center line.
+    assert all((p.w, p.h) == (0.5, 0.25) for p in fp.pads)
+    assert all(abs(p.x) - p.w / 2 == pytest.approx(0.2) for p in fp.pads)
+    assert all(abs(p.x) + p.w / 2 == pytest.approx(0.7) for p in fp.pads)
+    left = [by_num[n].y for n in ("1", "2", "3")]
+    right = [by_num[n].y for n in ("7", "6", "5")]
+    assert left == right == pytest.approx([-0.5, 0.0, 0.5])
+    # Terminal 1 top left, the signal ports diagonally apart from P3.
+    assert by_num["1"].x < 0 and by_num["6"].x > 0
+
+
+def net_of(circuit: dict, pin: str) -> tuple[str, set[str]]:
+    for n in circuit["nets"]:
+        if pin in n["pins"]:
+            return n["name"], set(n["pins"])
+    raise AssertionError(f"{pin} on no net")
+
+
+def test_esp32_boot_straps(circuit):
+    # Data sheet Table 3-3: GPIO28 low at reset selects download mode, and
+    # USB download (Joint Download Boot 0) also needs GPIO27 high.
+    _, boot = net_of(circuit, "U1.38")
+    assert {"SW1.1", "R6.2"} <= boot
+    _, pullup = net_of(circuit, "R6.1")
+    assert "U2.5" in pullup  # +3V3
+    # GPIO27 shares a net only with DRV_ENN, which has an internal pull-up.
+    # TMC2240 DIAG0 is driven low in reset and must not land here.
+    _, gpio27 = net_of(circuit, "U1.37")
+    assert gpio27 == {"U1.37", "U5.9"}
+
+
+def test_esp32_vm_sense_on_adc1(circuit):
+    # Table 2-7: ADC1_CH0..CH5 are GPIO1..GPIO6, pins 10..15.
+    name, pins = net_of(circuit, "R13.1")
+    assert name == "VM_SENSE"
+    mcu = {int(p.split(".")[1]) for p in pins if p.startswith("U1.")}
+    assert mcu and mcu <= set(range(10, 16))
+
+
+def test_esp32_usb_pins(circuit):
+    assert net_of(circuit, "U1.23")[0] == "USB_DP"  # GPIO14, USB_D+
+    assert net_of(circuit, "U1.22")[0] == "USB_DM"  # GPIO13, USB_D-
+
+
+def test_esp32_hf4_nc_pins_unconnected(circuit):
+    on_nets = {p for n in circuit["nets"] for p in n["pins"]}
+    for n in range(26, 33):
+        assert f"U1.{n}" in circuit["no_connect"]
+        assert f"U1.{n}" not in on_nets
