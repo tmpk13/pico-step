@@ -115,3 +115,16 @@ ohm at 5 GHz, harmonics below -35 dB). 0201 parts per the guidelines.
 - eparts-search returns the reel (TR) variant of most passives; use the MPN in
   the DigiKey list upload so packaging can be chosen there.
 - Two first-choice Murata MPNs were obsolete (100n 50V 0603, 10u 0805); alternates are in DIGIKEY.md.
+
+## RF reference suffix
+- Parts on the antenna path (nets ANT_2G, ANT_5G, RF_2G, RF_5G, RF_COM,
+  RF_ANT) carry `_rf`: C29_rf..C34_rf, L3_rf, L4_rf, R18_rf, FL1_rf, J5_rf.
+  The VDDA supply filter and RF bypass caps (C4, C5, C13, L1, C14) stay
+  plain; they are decoupling placed at the chip, not on the signal path.
+- KiCad 10.0.4 ERC and schematic parity accept references ending in a
+  non-digit. A reset annotation would renumber them; annotate with "keep
+  existing annotations" only.
+- Renamed in place in the .kicad_sch (Reference property and instance
+  reference) and .kicad_pcb (footprint Reference) so GUI edits survive;
+  circuit.py carries the same names. tests/test_refs.py checks the suffix
+  set against the RF nets and the sch/pcb reference sets against circuit.py.

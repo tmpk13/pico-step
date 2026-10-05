@@ -15,4 +15,5 @@ mise run render    # build/pico-step.png
 ```
 
 See `ARCHITECTURE.md` for the block diagram, `BOM.md` for sourced parts,
+`PARTS_BY_CHIP.md` for which parts support which chip,
 `TODO.md` for open work.

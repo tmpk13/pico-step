@@ -22,8 +22,8 @@ classDiagram
     }
     class RF {
         CLC match per port
-        diplexer FL1 LFD182G45DCHD481
-        CLC footprint, U.FL J5
+        diplexer FL1_rf LFD182G45DCHD481
+        CLC footprint, U.FL J5_rf
     }
     class TMC2240_U5 {
         SPI shared bus, CSN GPIO10

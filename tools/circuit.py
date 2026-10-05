@@ -184,33 +184,33 @@ groups.append({"name": "decoupling", "members": [*decoup, "L1"]})
 # are mid-range starting points from the guidelines' recommended ranges
 # (2.4 GHz: 1.2..3.0 pF / 2.0..3.0 nH, 5 GHz: 0.2..1.5 pF / 0..3 nH); all
 # of them must be tuned on the finished board with a network analyzer.
-part("FL1", "pico-step:LFD182G45DCHD481", "LFD182G45DCHD481",
+part("FL1_rf", "pico-step:LFD182G45DCHD481", "LFD182G45DCHD481",
      "pico-step:Murata_LFD182G45DCHD481",
      MPN="LFD182G45DCHD481", Manufacturer="Murata Electronics")
-cap("C29", "2.0p", C0201)
-ind("L3", "2.4nH")
-cap("C30", "2.0p", C0201)
-cap("C31", "0.8p", C0201)   # needs a short stub to the ground pad
-ind("L4", "1.5nH")
-cap("C32", "0.8p", C0201)
-part("C33", "Device:C", "DNP", C0201, dnp=True)
-part("R18", "Device:R", "0", "Resistor_SMD:R_0201_0603Metric")
-part("C34", "Device:C", "DNP", C0201, dnp=True)
-part("J5", "Connector:Conn_Coaxial", "ANT",
+cap("C29_rf", "2.0p", C0201)
+ind("L3_rf", "2.4nH")
+cap("C30_rf", "2.0p", C0201)
+cap("C31_rf", "0.8p", C0201)   # needs a short stub to the ground pad
+ind("L4_rf", "1.5nH")
+cap("C32_rf", "0.8p", C0201)
+part("C33_rf", "Device:C", "DNP", C0201, dnp=True)
+part("R18_rf", "Device:R", "0", "Resistor_SMD:R_0201_0603Metric")
+part("C34_rf", "Device:C", "DNP", C0201, dnp=True)
+part("J5_rf", "Connector:Conn_Coaxial", "ANT",
      "Connector_Coaxial:U.FL_Hirose_U.FL-R-SMT-1_Vertical",
      MPN="U.FL-R-SMT-1(10)", Manufacturer="Hirose")
-connect("ANT_2G", "U1.42", "C29.1", "L3.1")
-connect("RF_2G", "L3.2", "C30.1", "FL1.3")
-connect("ANT_5G", "U1.48", "C31.1", "L4.1")
-connect("RF_5G", "L4.2", "C32.1", "FL1.1")
-connect("RF_COM", "FL1.6", "C33.1", "R18.1")
-connect("RF_ANT", "R18.2", "C34.1", "J5.1")
-connect("GND", "FL1.2", "FL1.5", "FL1.7", "J5.2",
-        "C29.2", "C30.2", "C31.2", "C32.2", "C33.2", "C34.2")
+connect("ANT_2G", "U1.42", "C29_rf.1", "L3_rf.1")
+connect("RF_2G", "L3_rf.2", "C30_rf.1", "FL1_rf.3")
+connect("ANT_5G", "U1.48", "C31_rf.1", "L4_rf.1")
+connect("RF_5G", "L4_rf.2", "C32_rf.1", "FL1_rf.1")
+connect("RF_COM", "FL1_rf.6", "C33_rf.1", "R18_rf.1")
+connect("RF_ANT", "R18_rf.2", "C34_rf.1", "J5_rf.1")
+connect("GND", "FL1_rf.2", "FL1_rf.5", "FL1_rf.7", "J5_rf.2",
+        "C29_rf.2", "C30_rf.2", "C31_rf.2", "C32_rf.2", "C33_rf.2", "C34_rf.2")
 
 groups.append({"name": "rf", "stages": [
-    ["C29", "C31"], ["L3", "L4"], ["C30", "C32"], ["FL1"],
-    ["C33"], ["R18"], ["C34"], ["J5"],
+    ["C29_rf", "C31_rf"], ["L3_rf", "L4_rf"], ["C30_rf", "C32_rf"], ["FL1_rf"],
+    ["C33_rf"], ["R18_rf"], ["C34_rf"], ["J5_rf"],
 ]})
 
 # ---------------------------------------------------------------- TLE5012B
