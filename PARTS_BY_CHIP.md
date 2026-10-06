@@ -1,29 +1,21 @@
 # Parts by chip
 
-Every one of the 69 parts on the board, grouped by the chip it supports.
-Parts with an `_rf` suffix are on the ESP32-C5 antenna path.
+Every one of the 56 parts on the board, grouped by the chip it supports.
 
-## U1 ESP32-C5HF4
+## U1 RP2040
 
 | Function | Parts |
 | --- | --- |
-| Decoupling, VDDA6/VDDA7 | C3 10u, C4 0.8p, C5 0.3p |
-| Decoupling, VDDA8 | C6 1u |
-| Decoupling, VDDPST1/2/3 | C7 1u, C8 100n, C12 100n |
-| Decoupling, VDDA5 | C9 1u |
-| Decoupling, VDDA3/VDDA4 | C10 10n, C11 100n |
-| VDDA1/VDDA2 LC filter (PA harmonics) | C13 2.6p, L1 2.0nH 500mA, C14 3.0p, C15 100n, C16 10u |
-| 48 MHz crystal | Y1, L2 24nH (XTAL_P series), C27 10p, C28 10p |
-| USB Serial/JTAG series resistors | R3 22, R4 22 |
-| CHIP_PU delay and reset | R7 10k, C17 1u, SW2 RESET |
-| Boot strap (GPIO28) | R6 10k, SW1 BOOT |
-| UART0 header | R5 499, J3 |
-| Status LED (GPIO8) | R8 330, D1 |
-| RF match, 2.4 GHz | C29_rf 2.0p, L3_rf 2.4nH, C30_rf 2.0p |
-| RF match, 5 GHz | C31_rf 0.8p, L4_rf 1.5nH, C32_rf 0.8p |
-| Diplexer | FL1_rf |
-| Antenna CLC | C33_rf DNP, R18_rf 0, C34_rf DNP |
-| Antenna connector | J5_rf U.FL |
+| Decoupling, IOVDD | C3..C8 100n |
+| Decoupling, USB_VDD / ADC_AVDD | C9 100n, C10 100n |
+| Core regulator, VREG_VIN / VREG_VOUT | C11 1u, C12 1u |
+| Decoupling, DVDD | C13 100n, C14 100n |
+| 12 MHz crystal | Y1, C15 15p, C16 15p, R5 1k (XOUT) |
+| QSPI flash | U4 W25Q128JVS, C17 100n |
+| USB series resistors | R3 27, R4 27 |
+| BOOTSEL and reset | R6 1k, SW1 BOOTSEL, R7 10k, SW2 RESET |
+| SWD header | J3 |
+| Status LED (GPIO25) | R8 330, D1 |
 
 ## U5 TMC2240
 
@@ -43,6 +35,7 @@ Parts with an `_rf` suffix are on the ESP32-C5 antenna path.
 | --- | --- |
 | Decoupling | C18 100n |
 | SSC series resistors | R9 100 (SCK), R10 100 (CSQ), R11 470 (DATA) |
+| SPI1 TX into DATA (TX cannot tri-state) | R14 4.7k |
 
 ## U2 AP2112K-3.3
 
@@ -56,4 +49,4 @@ Parts with an `_rf` suffix are on the ESP32-C5 antenna path.
 | --- | --- |
 | USB-C input, CC pull-downs | J1, R1 5.1k, R2 5.1k |
 | Motor supply terminal and bulk (feeds U5) | J2, C19 100u 50V |
-| VM_SENSE divider (feeds U1 GPIO1 ADC) | R12 100k, R13 10k, C20 100n |
+| VM_SENSE divider (feeds U1 GPIO26 ADC0) | R12 100k, R13 10k, C20 100n |

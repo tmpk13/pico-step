@@ -1,9 +1,8 @@
 """Reference designator checks.
 
-Parts on the ESP32-C5 antenna path carry an `_rf` suffix so they stand out
-during placement and ordering. The schematic and board are edited in the
-KiCad GUI as well as generated, so their reference sets are compared with
-the generator to catch a rename made in only one place.
+The schematic and board are edited in the KiCad GUI as well as generated, so
+their reference sets are compared with the generator to catch a rename made
+in only one place.
 """
 
 from __future__ import annotations
@@ -17,7 +16,6 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-RF_NETS = {"ANT_2G", "ANT_5G", "RF_2G", "RF_5G", "RF_COM", "RF_ANT"}
 
 
 @pytest.fixture(scope="module")
@@ -38,18 +36,18 @@ def refs_in(path: Path) -> set[str]:
     return set(re.findall(r'\(property "Reference" "([^"#][^"]*)"', text))
 
 
-def test_rf_suffix_matches_rf_nets(circuit):
-    on_rf = {
-        pin.split(".")[0]
-        for net in circuit["nets"] if net["name"] in RF_NETS
-        for pin in net["pins"]
-    }
-    on_rf.discard("U1")
-    suffixed = {c["ref"] for c in circuit["components"] if c["ref"].endswith("_rf")}
-    assert suffixed == on_rf
-
-
 @pytest.mark.parametrize("board_file", ["pico-step.kicad_sch", "pico-step.kicad_pcb"])
 def test_kicad_refs_match_generator(circuit, board_file):
     gen = {c["ref"] for c in circuit["components"]}
     assert refs_in(ROOT / board_file) == gen
+
+
+def test_digikey_list_covers_generator(circuit):
+    import csv
+
+    with open(ROOT / "digikey_list.csv", newline="") as f:
+        rows = list(csv.DictReader(f))
+    refs = [r for row in rows for r in row["Customer Reference"].split()]
+    assert len(refs) == len(set(refs))
+    assert sum(int(row["Quantity"]) for row in rows) == len(refs)
+    assert set(refs) == {c["ref"] for c in circuit["components"]}

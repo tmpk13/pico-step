@@ -4,19 +4,11 @@
       outline 21-0140 / land pattern 90-0013 (not in the TMC2240 data sheet;
       `ref/` has only the data sheet). Footprint currently copies T3255-3
       (EP 3.1 x 3.1 mm); update `STOCK_COPIES` in `tools/footprints.py`.
-- [ ] Choose passive MPNs (all passives are value-only today).
 - [ ] PCB: TLE5012B on the motor shaft axis, diametric magnet; TMC2240 EP
       with many GND vias, VS caps at the VS pins.
-- [ ] PCB: "Update PCB from Schematic" for the ESP32-C5 swap (RP2040, its
-      flash and 12 MHz crystal leave; U1 QFN-48, RF section, FL1_rf, J5_rf arrive).
-- [ ] PCB RF: 50 ohm coplanar lines ANT_2G/ANT_5G -> FL1_rf -> J5_rf, matching
-      parts next to the chip, stub to ground on C31_rf (5 GHz shunt at the chip),
-      ground vias around the RF path, crystal away from the RF lines.
-- [ ] RF tuning on the assembled board with a VNA: C29_rf/L3_rf/C30_rf (2.4 GHz),
-      C31_rf/L4_rf/C32_rf (5 GHz), C33_rf/R18_rf/C34_rf (antenna). Crystal C27/C28 trimmed to
-      +-10 ppm with a TX tone test.
-- [ ] Source FL1_rf in small quantity (DigiKey sells reels of 4000 only).
-- [ ] 3V3 regulator thermal: AP2112K in SOT-23-5 at the 408 mA TX peak is
-      ~0.7 W from 5 V. Check the layout copper, or move to a SOT-89/SOT-223
-      LDO or a buck if Wi-Fi TX is sustained.
-- [ ] Choose the external dual-band (2.4 + 5 GHz) antenna for J5_rf.
+- [ ] PCB: "Update PCB from Schematic" for the swap back to the RP2040
+      (ESP32-C5, RF section, FL1_rf, J5_rf and the 48 MHz crystal leave;
+      RP2040 QFN-56, W25Q128 U4, 12 MHz Y1 and R14 arrive). Placement was done
+      on the ESP32-C5 netlist; refs C3..C28, R3..R8, L1..L4 changed meaning.
+      `tests/test_refs.py` fails until the board matches.
+- [ ] Check stock for the four passives new to the RP2040 list (DIGIKEY.md).

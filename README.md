@@ -1,8 +1,7 @@
 # pico-step
 
-Closed-loop stepper driver board: ESP32-C5HF4 (dual-band Wi-Fi 6, BLE) +
-TMC2240 driver + TLE5012B magnetic angle sensor, USB-C powered logic,
-separate motor supply (VM), U.FL antenna port.
+Closed-loop stepper driver board: RP2040 + TMC2240 driver + TLE5012B
+magnetic angle sensor, USB-C powered logic, separate motor supply (VM).
 
 The schematic is generated; edit `tools/circuit.py`, not the `.kicad_sch`.
 
@@ -16,4 +15,5 @@ mise run render    # build/pico-step.png
 
 See `ARCHITECTURE.md` for the block diagram, `BOM.md` for sourced parts,
 `PARTS_BY_CHIP.md` for which parts support which chip,
+`DIGIKEY.md` for the order list,
 `TODO.md` for open work.
