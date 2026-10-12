@@ -59,3 +59,26 @@ classDiagram
     Bridges_Q1_Q4 --> Motor_J4 : coils
     MotorSupply_J2 --> RP2354A_U1 : VM_SENSE
 ```
+
+## Board floor plan
+
+```mermaid
+flowchart TB
+    subgraph top [Top side]
+        J4[J4 motor, top edge] --- FETs[Q3 Q4 Q1 Q2 dual FETs in a row]
+        FETs --- RS[R18 R15 sense resistors] --- U5[TMC5160A]
+        J1[J1 USB-C, right edge]
+        C19[C19 bulk, left edge] --- J2[J2 VM in, bottom edge]
+        C35[C35 bulk, right edge] --- U5
+        U5 --- Y1[Y1 crystal, bottom edge] --- J3[J3 SWD, bottom edge]
+    end
+    subgraph back [Back side, faces the motor]
+        VM[VM pour under the FET row, vias into the drain paddles]
+        U3[TLE5012B at the shaft axis]
+        U1[RP2354A, SPI pins toward U5, regulator at its top left]
+        U2[AP2112K and USB parts under J1]
+    end
+    FETs -. vias .- VM
+    U5 -. SPI, STEP/DIR .- U1
+    U3 -. SSC, IIF .- U1
+```

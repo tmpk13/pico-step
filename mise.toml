@@ -66,7 +66,12 @@ run = "python3 tools/pcb_dsn.py"
 [tasks.pcb-autoroute]
 description = "Route build/pico-step.dsn with freerouting into build/pico-step.ses (FREEROUTING points at the launcher or jar)"
 env = { FREEROUTING = "{{env.FREEROUTING | default(value='freerouting')}}" }
-run = "$FREEROUTING -de build/pico-step.dsn -do build/pico-step.ses -mp 20 -da -dl"
+# Freerouting 2.1 pops a modal profile dialog after routing while its
+# profile email is empty and then never writes the session file.
+run = [
+    "python3 tools/freerouting_profile.py",
+    "$FREEROUTING -de build/pico-step.dsn -do build/pico-step.ses -mp 30 -da -dl",
+]
 
 [tasks.pcb-ses]
 description = "Import build/pico-step.ses into the board and refill the zones"

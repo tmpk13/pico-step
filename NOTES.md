@@ -242,6 +242,13 @@ re-running it overwrites GUI moves.
   Specctra export writes locked tracks as `(type fix)`, and the planes (GND
   on both layers, VM on the back) are exported as conduction areas, so the
   autorouter neither moves them nor routes GND.
+- Freerouting 2.1.0 from the CLI still opens its GUI; with an empty
+  profile email it then shows a modal User Settings dialog after routing
+  and never writes the session file (it also opens the GUI on whatever
+  DISPLAY is set, and dies with HeadlessException without one). With
+  logging on it looked like a hang at "traces not 45 degree".
+  `tools/freerouting_profile.py` writes a dummy email into
+  /tmp/freerouting/freerouting.json, telemetry off, before each run.
 - The TQFP-48 ThermalVias footprint has 0.2 mm via drills; the board rule
   and the fab want 0.3 mm, so `tools/pcb_route.py` widens them to 0.6/0.3 in
   place (DRC then reports a library mismatch for U5, expected).
