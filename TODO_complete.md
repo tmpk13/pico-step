@@ -11,3 +11,5 @@
 - Dropped: TMC2240 TQFN exposed pad check (part removed).
 - MCU swapped RP2040 -> RP2354A (2 MB in-package flash, W25Q128 U4 removed): pinout checked against the RP2350 data sheet, switching core regulator per data sheet 6.3.8 (L1 polarity-marked inductor with a project footprint, R27/C17 VREG_AVDD filter, 4.7u CIN/COUT, C36 on DVDD 23). Swapped in place in the hand-placed schematic (U1 position and uuid kept, old pin labels reused); ERC clean, parity shows only the existing hand edits. DigiKey list 84 parts.
 - Bridge FETs 8x CSD19537Q3 -> 4x SQJB68EP dual (one per half bridge) for cost at 5-board quantities; project footprint from Vishay doc 63817 with a data sheet test, stock dual symbol as two units placed where the old singles were (no wires moved). RSENSE 0.1 -> 0.15 (1.6 A RMS full scale) to keep standstill FET heat near 0.7 W; short-detect levels noted. ERC clean, parity shows only the existing hand edits. DigiKey list 80 parts.
+- PCB updated from the schematic; every part placed (`tools/pcb_place.py`).
+- PCB: TLE5012B on the back at the shaft axis (board center).

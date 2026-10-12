@@ -61,7 +61,7 @@ run = "python3 tools/pcb_fill.py"
 
 [tasks.pcb-dsn]
 description = "Export build/pico-step.dsn for freerouting"
-run = "python3 -c \"import pcbnew; b = pcbnew.LoadBoard('pico-step.kicad_pcb'); pcbnew.ExportSpecctraDSN(b, 'build/pico-step.dsn')\""
+run = "python3 tools/pcb_dsn.py"
 
 [tasks.pcb-autoroute]
 description = "Route build/pico-step.dsn with freerouting into build/pico-step.ses (FREEROUTING points at the launcher or jar)"

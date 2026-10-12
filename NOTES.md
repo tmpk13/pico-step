@@ -188,3 +188,63 @@ parts sit where U4 was.
   alternates are in DIGIKEY.md.
 - `tests/test_refs.py` checks that the order list names every generator
   reference exactly once and that quantities add up.
+
+## PCB floor plan
+The 42.2 mm square with 31 mm hole spacing is a NEMA17 back-mount: U3 sits
+on the back at the shaft axis (100, 100). The back faces the motor, so it
+only carries parts under 1.2 mm tall (U1 with its regulator, decoupling and
+pull resistors, U3 and its series resistors, the USB CC and LDO parts
+under J1). Keep a 6 mm radius around the center on the back free for the
+shaft magnet; nothing but U3 is inside it. M3 heads need about 3 mm radius
+around each hole on both sides.
+
+Top side, top to bottom: J4 and the two buttons on the top edge, the four
+dual FETs in a row (Q3 Q4 Q1 Q2 = 1B 2B 1A 2A, the order of U5's gate
+pins), R18 and R15 under them, U5, then J2, the crystal and J3 on the
+bottom edge. C19 (J2 side) and C35 (VM side) are the only parts that take
+the left and right edges below the FET row; J1 sits at the right edge
+beside the FET row. The placement is a table in `tools/pcb_place.py`;
+re-running it overwrites GUI moves.
+
+- U5 is shifted right (x 103.9) and down (y 105.0) so its thermal vias and
+  back pad clear U3's pads on the back; its gate edge faces the FET row.
+- Each SQJB68EP's S1 lead is joined to the D2 paddle by a 0.5 mm trace
+  around the left side of the package and over the top (the data sheet
+  wants a pour, but the lead row and the D1 paddle block the direct way).
+  The FET pitch is 6.2 mm to leave a 1 mm gap for that trace between
+  neighbors. VM reaches the D1 paddles through two 0.8 mm vias each from
+  a pour on the back under the row.
+- J4's pin order 1A 2A 1B 2B against the FET order means the pairs cross:
+  phase A outputs run on the top at y 83.6 and 84.5, phase B on the back at
+  y 84.2 and 85.4, through vias at the ends of the output runs.
+- Low side sources: Q3's goes straight into R18's hot pad; Q4, Q1 and Q2
+  cross the gate fan-out on the back through 1.0 mm vias, ending in a via
+  inside the resistor's hot pad.
+- SRAH/SRBH (R19, R21) start at the sense resistors' hot pads (true
+  Kelvin). SRAL/SRBL (R20, R22) return through the GND plane, not a Kelvin
+  trace to the resistor's GND pad: at 2 A the plane drop over a few mm is
+  about 1 mV against 330 mV full scale.
+- U1 is rotated so its SPI/STEP/DIR pins (1..15) face U5's digital edge
+  across a corridor kept free of top side parts; with those pins facing
+  the board edge the autorouter had to loop every driver line around the
+  chip and left a third of the board unrouted. The regulator pins end up
+  at the top left of U1, beside (not under) U5's thermal via field, and
+  the encoder, SWD and crystal pins at the bottom edge.
+- The crystal is on the top at the bottom edge with two vias to U1's
+  XIN/XOUT pins; next to U1 on the back it blocked the escape of the
+  neighboring pins.
+- Rules for the autorouter: 0.15 mm track and clearance, 0.5/0.3 mm vias
+  (JLCPCB 2-layer limits). With 0.2/0.2 freerouting could not leave the
+  0.4 mm pitch QFN-60 pads at all (a 0.2 mm trace centered on a 0.2 mm
+  pad has exactly 0.2 mm to the neighbors, and the router needs margin),
+  and it left over 120 of 142 connections unrouted.
+- Freerouting routes the rest. `tools/pcb_route.py` locks its copper, the
+  Specctra export writes locked tracks as `(type fix)`, and the planes (GND
+  on both layers, VM on the back) are exported as conduction areas, so the
+  autorouter neither moves them nor routes GND.
+- The TQFP-48 ThermalVias footprint has 0.2 mm via drills; the board rule
+  and the fab want 0.3 mm, so `tools/pcb_route.py` widens them to 0.6/0.3 in
+  place (DRC then reports a library mismatch for U5, expected).
+- Net-(J2-Pin_1) is still split from VM (see "Power?"): J2 pin 1 is wired
+  to C19 only. The link to VM is one short trace from C19's + pad to the
+  VM pour's left arm once the schematic decides.

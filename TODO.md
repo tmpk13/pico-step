@@ -1,26 +1,19 @@
 # TODO
 
-- [ ] PCB: "Update PCB from Schematic" for the RP2354A (QFN-60, U4 gone,
-      L1/R27/C36 new, C17 now the VREG_AVDD filter cap), the RP2040
-      swap-back and the TMC5160A driver (ESP32-C5, RF section, FL1_rf, J5_rf, 48 MHz crystal
-      and the TMC2240 leave; RP2040, W25Q128 U4, 12 MHz Y1, R14, U5
-      TMC5160A, Q1..Q4 SQJB68EP duals, C27..C35 and R18..R26 arrive). Refs C3..C28,
-      R3..R8, R15..R17, L1..L4 changed meaning. `tests/test_refs.py` fails
-      until the board matches.
-- [ ] PCB: RP2354A core regulator copied from RP2350 data sheet Figure 26:
-      L1 dot (pad 1) on the VOUT side, CIN/COUT/L1 on the top side next to
-      pins 47..50, copper cut away under L1 and the LX trace, C36 at DVDD
-      pin 23, separate GND vias for CIN and the R27/C17 filter.
-- [ ] PCB: TLE5012B on the motor shaft axis, diametric magnet.
-- [ ] PCB power stage: FETs and C33/C34 tight around each half bridge, R15/R18
-      Kelvin traces to SRAL/SRBL, short gate and BM traces, C21/C23 at the
-      VS/VCP pins, C27 to GNDA, many vias under the U5 exposed pad. Check
-      BM undershoot stays above -5 V (data sheet section 3.4).
+- [ ] PCB: check the RP2354A core regulator against RP2350 data sheet
+      Figure 26. L1, C11, C12, R27, C17 sit right of U1 on the back; still
+      to do: cut the GND pour under L1 and the LX trace, separate GND vias
+      for CIN and the R27/C17 filter, shorten the autorouted LX trace.
+- [ ] PCB power stage review: C33/C34 are on the back under R15 and left of
+      the FET row (not tight at the bridges), SRAL/SRBL return through the
+      GND plane (NOTES.md, PCB floor plan), gate and BM traces are
+      autorouted. Check BM undershoot stays above -5 V (data sheet 3.4).
 - [ ] Decide VM overvoltage handling for regenerative braking at 48 V (no
       clamp fitted; a TVS standing off 48 V clamps above the 60 V maximum).
-- [ ] PCB: in each SQJB68EP join S1 (pin 1) to the D2 paddle with a wide,
-      short pour; D1 paddle to VM, S2 (pin 3) to the sense resistor.
-      Copper under both paddles for heat (85 C/W assumes 1 in^2).
+- [ ] PCB: the S1 to D2 link is a 0.5 mm trace around the package, not a
+      wide pour (NOTES.md). Consider a wider link or a second one on the
+      back, and more copper under the paddles for heat (85 C/W assumes
+      1 in^2).
 - [ ] Firmware: SHORT_CONF S2VS_LEVEL >= 9 and S2G_LEVEL >= 8 before
       enabling the driver (NOTES.md, short detection), and IHOLD below
       IRUN so standstill heat stays under the 0.7 W worst case.

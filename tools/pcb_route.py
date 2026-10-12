@@ -203,10 +203,10 @@ def route_vm(r: Router) -> None:
     # left feed: pour -> VS pin 4 and its capacitor C21
     c21x, c21y, _ = r.pad("C21", "1")
     p4x, p4y, _ = r.pad("U5", "4")
-    r.track(B, [(87.0, 96.3), (87.0, 106.0), (96.6, 106.0), (97.0, 106.3)], 0.8, "VM")
-    r.via(97.0, 106.3, "VM")
-    r.track(F, [(97.0, 106.3), (c21x, c21y)], 0.5, "VM")
-    r.track(F, [(97.0, 106.3), (98.25, 106.3), (98.25, p4y)], 0.5, "VM")
+    r.track(B, [(87.0, 96.3), (87.0, 106.0), (94.6, 106.0), (95.0, 105.6)], 0.8, "VM")
+    r.via(95.0, 105.6, "VM")
+    r.track(F, [(95.0, 105.6), (c21x, c21y)], 0.5, "VM")
+    r.track(F, [(95.0, 105.6), (95.0, 106.3), (98.25, 106.3), (98.25, p4y)], 0.5, "VM")
     r.track(F, [(98.25, p4y), (p4x - 0.4, p4y)], 0.3, "VM")
     # right feed: pour -> C33, C23, C22, VSA pin 33 and the bulk cap C35
     c23x, c23y, _ = r.pad("C23", "1")
