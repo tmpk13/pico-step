@@ -1,17 +1,17 @@
 # Parts by chip
 
-Every one of the 82 parts on the board, grouped by the chip it supports.
+Every one of the 84 parts on the board, grouped by the chip it supports.
 
-## U1 RP2040
+## U1 RP2354A
 
 | Function | Parts |
 | --- | --- |
 | Decoupling, IOVDD | C3..C8 100n |
-| Decoupling, USB_VDD / ADC_AVDD | C9 100n, C10 100n |
-| Core regulator, VREG_VIN / VREG_VOUT | C11 1u, C12 1u |
-| Decoupling, DVDD | C13 100n, C14 100n |
+| Decoupling, USB_OTP_VDD + QSPI_IOVDD / ADC_AVDD | C9 100n, C10 100n |
+| Core regulator, CIN / COUT / inductor | C11 4.7u, C12 4.7u, L1 3.3u |
+| Core regulator, VREG_AVDD filter | R27 33, C17 4.7u |
+| Decoupling, DVDD (pins 6, 39, 23) | C13 100n, C14 100n, C36 4.7u |
 | 12 MHz crystal | Y1, C15 15p, C16 15p, R5 1k (XOUT) |
-| QSPI flash | U4 W25Q128JVS, C17 100n |
 | USB series resistors | R3 27, R4 27 |
 | BOOTSEL and reset | R6 1k, SW1 BOOTSEL, R7 10k, SW2 RESET |
 | SWD header | J3 |

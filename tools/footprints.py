@@ -194,7 +194,24 @@ def pg_dso_8() -> Footprint:
     )
 
 
-FOOTPRINTS = [pg_dso_8]
+def l_abracon_aota_b201610() -> Footprint:
+    # Abracon AOTA-B201610S3R3-101-T data sheet Rev. A, "Recommended Land
+    # Pattern": two 1.0 x 1.6 mm pads, 1.0 mm gap. Body 2.0 x 1.6 mm. The
+    # part carries a polarity dot; pad 1 is the dot end, which the RP2350
+    # regulator layout (RP2350 data sheet Figure 26) puts on VOUT, with
+    # pad 2 on VREG_LX.
+    return Footprint(
+        name="L_Abracon_AOTA-B201610",
+        descr="Abracon AOTA-B201610 2.0x1.6 mm polarity-marked inductor, pad 1 = dot",
+        tags="inductor 2016 0806 Abracon AOTA RP2350",
+        body_w=2.0,
+        body_h=1.6,
+        pads=[Pad("1", -1.0, 0.0, 1.0, 1.6), Pad("2", 1.0, 0.0, 1.0, 1.6)],
+        model="${KICAD9_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_Murata_DFE201610P.step",
+    )
+
+
+FOOTPRINTS = [pg_dso_8, l_abracon_aota_b201610]
 
 STOCK_FP_DIR = Path("/usr/share/kicad/footprints")
 

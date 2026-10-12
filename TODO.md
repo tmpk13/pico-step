@@ -1,11 +1,16 @@
 # TODO
 
-- [ ] PCB: "Update PCB from Schematic" for the RP2040 swap-back and the
-      TMC5160A driver (ESP32-C5, RF section, FL1_rf, J5_rf, 48 MHz crystal
+- [ ] PCB: "Update PCB from Schematic" for the RP2354A (QFN-60, U4 gone,
+      L1/R27/C36 new, C17 now the VREG_AVDD filter cap), the RP2040
+      swap-back and the TMC5160A driver (ESP32-C5, RF section, FL1_rf, J5_rf, 48 MHz crystal
       and the TMC2240 leave; RP2040, W25Q128 U4, 12 MHz Y1, R14, U5
       TMC5160A, Q1..Q8, C27..C35 and R18..R26 arrive). Refs C3..C28,
       R3..R8, R15..R17, L1..L4 changed meaning. `tests/test_refs.py` fails
       until the board matches.
+- [ ] PCB: RP2354A core regulator copied from RP2350 data sheet Figure 26:
+      L1 dot (pad 1) on the VOUT side, CIN/COUT/L1 on the top side next to
+      pins 47..50, copper cut away under L1 and the LX trace, C36 at DVDD
+      pin 23, separate GND vias for CIN and the R27/C17 filter.
 - [ ] PCB: TLE5012B on the motor shaft axis, diametric magnet.
 - [ ] PCB power stage: FETs and C33/C34 tight around each half bridge, R15/R18
       Kelvin traces to SRAL/SRBL, short gate and BM traces, C21/C23 at the
@@ -18,6 +23,6 @@
 - [ ] Check stock for the resistors not searched (DIGIKEY.md).
 - [ ] Settle the hand edits that differ from `tools/circuit.py`
       (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and
-      TMC5160 DIAG0/DIAG1 not wired to RP2040 GPIO9/GPIO17 ("Selectable?"
+      TMC5160 DIAG0/DIAG1 not wired to MCU GPIO9/GPIO17 ("Selectable?"
       note; their global labels at U1 are unconnected). Then update one or
       the other.

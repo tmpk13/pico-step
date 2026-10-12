@@ -1,6 +1,6 @@
 # pico-step
 
-Closed-loop stepper driver board: RP2040 + TMC5160A motion controller and
+Closed-loop stepper driver board: RP2354A + TMC5160A motion controller and
 gate driver (eight external MOSFETs) + TLE5012B magnetic angle sensor.
 USB-C powered logic, separate motor supply (VM) up to 48 V.
 

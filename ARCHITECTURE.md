@@ -11,9 +11,10 @@ classDiagram
         AP2112K-3.3
         VBUS to +3V3
     }
-    class RP2040_U1 {
+    class RP2354A_U1 {
+        2 MB flash in package
+        core regulator L1 3.3u, +1V1
         12 MHz crystal Y1
-        QSPI flash U4 W25Q128JV
         BOOTSEL, RESET, SWD J3
         LED GPIO25
     }
@@ -46,15 +47,15 @@ classDiagram
         VM_SENSE 100k/5.6k to GPIO26 ADC0
     }
     USB_C_J1 --> LDO_U2 : VBUS
-    USB_C_J1 --> RP2040_U1 : USB 27R series
-    LDO_U2 --> RP2040_U1 : +3V3
+    USB_C_J1 --> RP2354A_U1 : USB 27R series
+    LDO_U2 --> RP2354A_U1 : +3V3
     LDO_U2 --> TLE5012B_U3 : +3V3
-    RP2040_U1 --> TMC5160A_U5 : SPI0 + STEP/DIR + SD_MODE
-    TLE5012B_U3 --> RP2040_U1 : angle (SSC)
+    RP2354A_U1 --> TMC5160A_U5 : SPI0 + STEP/DIR + SD_MODE
+    TLE5012B_U3 --> RP2354A_U1 : angle (SSC)
     MotorSupply_J2 --> TMC5160A_U5 : VM (VS, VSA)
     MotorSupply_J2 --> Bridges_Q1_Q8 : VM
     TLE5012B_U3 --> TMC5160A_U5 : IIF encoder
     TMC5160A_U5 --> Bridges_Q1_Q8 : gate drive, sense
     Bridges_Q1_Q8 --> Motor_J4 : coils
-    MotorSupply_J2 --> RP2040_U1 : VM_SENSE
+    MotorSupply_J2 --> RP2354A_U1 : VM_SENSE
 ```

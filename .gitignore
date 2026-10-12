@@ -9,4 +9,5 @@ pico-step-backups/
 fp-info-cache
 \#auto_saved_files#
 ~*.lck
-ref/_autosave-*
+ref/
+_autosave-*

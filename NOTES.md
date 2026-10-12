@@ -1,8 +1,8 @@
 # Notes
 
-## TLE5012B DATA line on an RP2040 SPI master
+## TLE5012B DATA line on an RP2354A SPI master
 The sensor's SSC DATA pin is half duplex. The data sheet (Figure 11) wants
-470R on DATA and a master whose TX tri-states. RP2040 SPI TX never
+470R on DATA and a master whose TX tri-states. RP2350 SPI TX never
 tri-states, so GPIO11 (SPI1 TX) joins the MCU-side DATA node through 4.7k
 and GPIO12 (SPI1 RX) reads it directly. When the sensor drives through
 470R against TX through 4.7k, the node lands within ~0.3 V of the sensor's
@@ -79,19 +79,45 @@ C21..C26 and R15..R17 kept their numbers but are different parts now.
   net through 1k. With SD_MODE high keep the TLE5012B IIF outputs off, or
   IFB enables DcStep.
 - DRV_ENN (28) has no internal pull (the TMC2240's did). 10k to 3V3 against
-  the RP2040's ~50k reset pull-down holds 2.75 V, above VIH = 0.7 x VCC_IO
+  the MCU's ~50k reset pull-down holds 2.75 V, above VIH = 0.7 x VCC_IO
   = 2.31 V, so the bridges stay off until firmware drives GPIO8 low.
 - DIAG0/DIAG1 keep 10k pull-ups (open drain needs 47k or less).
 - The exposed pad is pin 49 (GNDD/GNDP, low side gate driver ground).
 
 ## MCU choice
-The board went RP2040 -> ESP32-C5HF4 -> RP2040. The ESP32-C5 version
+The board went RP2040 -> ESP32-C5HF4 -> RP2040 -> RP2354A. The ESP32-C5 version
 (dual-band Wi-Fi, RF diplexer, TLE5012B on a shared 3-wire SPI bus, strap
 rules) is commit eee3e1e plus 1840e9d; 738db68 holds its schematic and PCB
 placement. Swapping back restored the generator, symbols, footprints and
 tests from b46301c. The PCB still carries the ESP32 footprints and needs
 Update PCB from Schematic; the shared references (C3.., R3.., Y1) mean
 different parts now, so check the placement of every reused reference.
+
+## RP2354A
+- RP2350A die with 2 MB flash stacked in the package, so U4 (W25Q128) and
+  its decoupling are gone. The in-package flash sits on the QSPI bus; the
+  QSPI_SCLK/SD0..SD3 pins stay bonded out and are left open (they can carry
+  a second QSPI device with GPIO0 as XIP_CS1n). QSPI_SS still keeps the
+  BOOTSEL button through 1k: the boot ROM samples it.
+- Pinout checked against the RP2350 data sheet (Figure 2 and the QFN-60
+  pin tables), all 61 pins; KiCad's RP2354A symbol matches. The pin table
+  lists 54 under IOVDD as well, which is QSPI_IOVDD in every other place.
+- Core supply is a switching regulator (data sheet 6.3.8): CIN and COUT
+  4.7u, 3.3u fully shielded inductor, VREG_AVDD through 33R / 4.7u, a
+  second 4.7u on DVDD pin 23. 0603 25 V X5R parts keep their value at
+  3.3 V bias, unlike the 0402 6.3 V parts on the reference design.
+- The inductor's orientation matters (its stray field couples into the
+  LX/COUT loop and upsets the regulator). Only the polarity-marked Abracon
+  AOTA-B201610S3R3-101-T comes on a reel with one orientation. Data sheet
+  Figure 26 puts the dot on the VOUT pad, so the project footprint
+  `L_Abracon_AOTA-B201610` has pad 1 = dot and the schematic puts pad 1 on
+  +1V1, pad 2 on VREG_LX. Copy Figure 26 for the PCB layout.
+- Erratum RP2350-E9 (a pad with its input buffer on, sitting between VIL
+  and VIH, sources about 120 uA and latches near 2.2 V) is listed for the
+  A2 stepping only. DigiKey sells the RP2354A only as A4 (SC1511-A4), so
+  R25 (SD_MODE) keeps 10k. On an A2 part it would need 8.2k or less. The
+  VM_SENSE divider (5.3k source) feeds an ADC pin: firmware must clear the
+  pad's input enable on GPIO26 either way (the SDK's adc_gpio_init does).
 
 ## Hand-placed schematic
 The schematic was arranged in the KiCad GUI after generation, including
@@ -122,6 +148,14 @@ places a symbol's Reference/Value itself, over U5's top and bottom pin
 numbers, so they were moved outside the body corners after the paste. The
 hand edits survive: DIAG0/DIAG1 reach only their pull-ups ("Selectable?"
 note moved next to them) and VM stays split from J2.
+
+The RP2040 -> RP2354A swap kept U1's position and uuid (both symbols span
+the same +-25.4 x +-45.72 mm). Every wire, label, power symbol and NC flag
+attached to U1, U4 and C17 was removed by cluster; each new pin was then
+wired with a stub and the label the old pin of the same name had, so the
+hand edits (DIAG0/DIAG1 labels at U1 left floating) carry over. R14.1 and
+R5.1 had wires straight to the old U1 and got labels instead. The regulator
+parts sit where U4 was.
 
 ## DigiKey list
 - eparts-search returns the reel (TR) variant of most passives; use the MPN in

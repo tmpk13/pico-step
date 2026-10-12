@@ -2,10 +2,12 @@
 
 Import `digikey_list.csv` into a DigiKey list (Quantity, Part Number = MPN).
 Matching by MPN lets DigiKey offer cut tape for prototype quantities.
-38 lines, 82 parts.
+40 lines, 84 parts.
 
 Notes:
-- SC0914(13) is the RP2040 reel number; DigiKey also lists smaller packs of the same part.
+- SC1511-A4 is the RP2354A (A4 stepping) 500-piece reel; SC1511(13)-A4 is the 3400-piece reel.
+- L1 must be the polarity-marked AOTA-B201610S3R3-101-T; a generic 3.3u has no marked
+  orientation, and the RP2350 regulator is sensitive to it.
 - Stock was last checked for the ICs and connectors (BOM.md, 2026-10-02), for
   the passives shared with the ESP32-C5 variant (2026-10-04) and for the
   TMC5160 stage (2026-10-11). RC0603FR-0727RL, RC0603FR-071KL,

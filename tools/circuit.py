@@ -71,35 +71,52 @@ connect("+3V3", "U2.5", "C2.1")
 
 groups.append({"name": "usb_power", "stages": [["J1"], ["R1", "R2", "C1"], ["U2"], ["C2"]]})
 
-# ---------------------------------------------------------------- RP2040 core
+# ---------------------------------------------------------------- RP2354A core
+# RP2354A: RP2350A die with 2 MB flash stacked in the package on the QSPI
+# bus, so no external flash. The other QSPI pins are left open.
 part(
-    "U1", "MCU_RaspberryPi:RP2040", "RP2040",
-    "Package_DFN_QFN:QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm",
-    MPN="SC0914(13)", Manufacturer="Raspberry Pi",
+    "U1", "MCU_RaspberryPi:RP2354A", "RP2354A",
+    "Package_DFN_QFN:QFN-60-1EP_7x7mm_P0.4mm_EP3.4x3.4mm",
+    MPN="SC1511-A4", Manufacturer="Raspberry Pi",
 )
 res("R3", "27")
 res("R4", "27")
 connect("USB_C_DP", "R3.1")
 connect("USB_C_DM", "R4.1")
-connect("USB_DP", "R3.2", "U1.47")
-connect("USB_DM", "R4.2", "U1.46")
+connect("USB_DP", "R3.2", "U1.52")
+connect("USB_DM", "R4.2", "U1.51")
 
-iovdd = ["U1.1", "U1.10", "U1.22", "U1.33", "U1.42", "U1.49"]
+iovdd = ["U1.1", "U1.11", "U1.20", "U1.30", "U1.38", "U1.45"]
 decoup = []
 for i, pin in enumerate(iovdd):
     decoup.append(cap(f"C{3 + i}", "100n"))
-cap("C9", "100n")    # USB_VDD
+cap("C9", "100n")    # USB_OTP_VDD and QSPI_IOVDD share one, as on the reference design
 cap("C10", "100n")   # ADC_AVDD
-cap("C11", "1u")     # VREG_VIN
-cap("C12", "1u")     # VREG_VOUT
-cap("C13", "100n")   # DVDD pin 23
-cap("C14", "100n")   # DVDD pin 50
-connect("+3V3", *iovdd, "U1.48", "U1.43", "U1.44",
-        *(f"{c}.1" for c in decoup), "C9.1", "C10.1", "C11.1")
-connect("+1V1", "U1.45", "U1.23", "U1.50", "C12.1", "C13.1", "C14.1")
-connect("GND", "U1.57", "U1.19",
-        *(f"{c}.2" for c in decoup), "C9.2", "C10.2", "C11.2",
-        "C12.2", "C13.2", "C14.2")
+connect("+3V3", *iovdd, "U1.53", "U1.54", "U1.44",
+        *(f"{c}.1" for c in decoup), "C9.1", "C10.1")
+connect("GND", "U1.61", *(f"{c}.2" for c in decoup), "C9.2", "C10.2")
+
+# Core switching regulator (RP2350 data sheet section 6.3.8): CIN and COUT
+# 4.7u, fully shielded polarity-marked 3.3u inductor with its dot on the
+# VOUT side, VREG_AVDD through a 33R / 4.7u filter. A second 4.7u sits on
+# DVDD pin 23, the other DVDD pins get 100n.
+part(
+    "L1", "Device:L", "3.3u", "pico-step:L_Abracon_AOTA-B201610",
+    MPN="AOTA-B201610S3R3-101-T", Manufacturer="Abracon",
+)
+cap("C11", "4.7u")   # CIN, VREG_VIN
+cap("C12", "4.7u")   # COUT
+res("R27", "33")
+cap("C17", "4.7u")   # VREG_AVDD filter
+cap("C13", "100n")   # DVDD pin 6
+cap("C14", "100n")   # DVDD pin 39
+cap("C36", "4.7u")   # DVDD pin 23
+connect("+3V3", "U1.49", "C11.1", "R27.1")
+connect("VREG_AVDD", "R27.2", "U1.46", "C17.1")
+connect("VREG_LX", "U1.48", "L1.2")
+connect("+1V1", "L1.1", "C12.1", "U1.50", "U1.6", "U1.23", "U1.39",
+        "C13.1", "C14.1", "C36.1")
+connect("GND", "U1.47", "C11.2", "C12.2", "C17.2", "C13.2", "C14.2", "C36.2")
 
 # 12 MHz crystal: ABM8-272-T3 (CL 10 pF), 15 pF loads, 1k on XOUT.
 part(
@@ -110,26 +127,12 @@ part(
 cap("C15", "15p")
 cap("C16", "15p")
 res("R5", "1k")
-connect("XIN", "U1.20", "Y1.1", "C15.1")
-connect("XOUT", "U1.21", "R5.1")
+connect("XIN", "U1.21", "Y1.1", "C15.1")
+connect("XOUT", "U1.22", "R5.1")
 connect("XTAL_OUT", "R5.2", "Y1.3", "C16.1")
 connect("GND", "Y1.2", "Y1.4", "C15.2", "C16.2")
 
-# QSPI flash
-part(
-    "U4", "Memory_Flash:W25Q128JVS", "W25Q128JVS",
-    "Package_SO:SOIC-8_5.3x5.3mm_P1.27mm",
-    MPN="W25Q128JVSIQ", Manufacturer="Winbond",
-)
-cap("C17", "100n")
-connect("QSPI_SS", "U1.56", "U4.1")
-connect("QSPI_SCLK", "U1.52", "U4.6")
-connect("QSPI_SD0", "U1.53", "U4.5")
-connect("QSPI_SD1", "U1.55", "U4.2")
-connect("QSPI_SD2", "U1.54", "U4.3")
-connect("QSPI_SD3", "U1.51", "U4.7")
-connect("+3V3", "U4.8", "C17.1")
-connect("GND", "U4.4", "C17.2")
+connect("QSPI_SS", "U1.60")
 
 # BOOTSEL pulls QSPI_SS low through 1k; RESET pulls RUN low.
 SW = "Button_Switch_SMD:SW_SPST_PTS810"
@@ -161,15 +164,18 @@ groups.append({"name": "mcu", "stages": [
     ["R3", "R4"],
     ["Y1", "C15", "C16", "R5"],
     ["U1"],
-    ["U4", "C17", "R6", "SW1", "R7", "SW2", "J3", "R8", "D1"],
+    ["R6", "SW1", "R7", "SW2", "J3", "R8", "D1"],
 ]})
 groups.append({"name": "decoupling", "members": [
-    *decoup, "C9", "C10", "C11", "C12", "C13", "C14",
+    *decoup, "C9", "C10", "C13", "C14", "C36",
+]})
+groups.append({"name": "core_regulator", "stages": [
+    ["C11", "R27", "C17"], ["L1"], ["C12"],
 ]})
 
 # ---------------------------------------------------------------- TLE5012B
 # SSC per data sheet Figure 11: 100R on SCK and CSQ, 470R on DATA. The
-# RP2040 SPI TX cannot tri-state, so it joins the DATA node through 4.7k
+# RP2354A SPI TX cannot tri-state, so it joins the DATA node through 4.7k
 # and loses any contention with the sensor; RX reads the node directly.
 part(
     "U3", "Sensor_Magnetic:TLE5012B", "TLE5012BE5000",
@@ -183,15 +189,15 @@ res("R11", "470")
 res("R14", "4.7k")
 connect("+3V3", "U3.6", "C18.1")
 connect("GND", "U3.7", "C18.2")
-connect("ENC_SCK", "U1.13", "R9.1")       # GPIO10 SPI1 SCK
+connect("ENC_SCK", "U1.14", "R9.1")       # GPIO10 SPI1 SCK
 connect("ENC_SCK_S", "R9.2", "U3.2")
-connect("ENC_CSQ", "U1.16", "R10.1")      # GPIO13 SPI1 CSn
+connect("ENC_CSQ", "U1.17", "R10.1")      # GPIO13 SPI1 CSn
 connect("ENC_CSQ_S", "R10.2", "U3.3")
-connect("ENC_TX", "U1.14", "R14.1")       # GPIO11 SPI1 TX
-connect("ENC_DATA", "U1.15", "R14.2", "R11.1")  # GPIO12 SPI1 RX
+connect("ENC_TX", "U1.15", "R14.1")       # GPIO11 SPI1 TX
+connect("ENC_DATA", "U1.16", "R14.2", "R11.1")  # GPIO12 SPI1 RX
 connect("ENC_DATA_S", "R11.2", "U3.4")
-connect("ENC_IFA", "U1.17", "U3.5")       # GPIO14, PWM output in E5000
-connect("ENC_IFB", "U1.18", "U3.8")       # GPIO15
+connect("ENC_IFA", "U1.18", "U3.5")       # GPIO14, PWM output in E5000
+connect("ENC_IFB", "U1.19", "U3.8")       # GPIO15
 connect("ENC_IFC", "U1.27", "U3.1")       # GPIO16
 
 groups.append({"name": "encoder", "stages": [
@@ -211,7 +217,7 @@ res("R13", "5.6k")
 cap("C20", "100n")
 connect("VM", "J2.1", "C19.1", "R12.1")
 connect("GND", "J2.2", "C19.2", "R13.2", "C20.2")
-connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.38")  # GPIO26 ADC0
+connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.40")  # GPIO26 ADC0
 
 groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13", "C20"]]})
 
@@ -309,20 +315,20 @@ connect("TMC_SB", "R18.1", "R21.1")
 connect("TMC_SRBH", "R21.2", "U5.9")
 connect("TMC_SRBL", "R22.1", "U5.10")
 
-# RP2040 interface: SPI0 on GPIO2..5.
+# MCU interface: SPI0 on GPIO2..5.
 connect("TMC_SCK", "U1.4", "U5.14")     # GPIO2 SPI0 SCK
 connect("TMC_SDI", "U1.5", "U5.15")     # GPIO3 SPI0 TX
-connect("TMC_SDO", "U1.6", "U5.16")     # GPIO4 SPI0 RX
-connect("TMC_CSN", "U1.7", "U5.13")     # GPIO5 SPI0 CSn
+connect("TMC_SDO", "U1.7", "U5.16")     # GPIO4 SPI0 RX
+connect("TMC_CSN", "U1.8", "U5.13")     # GPIO5 SPI0 CSn
 # REFL_STEP / REFR_DIR: reference switch inputs with SD_MODE low, STEP/DIR
 # with SD_MODE high.
-connect("TMC_STEP", "U1.8", "U5.17")    # GPIO6
-connect("TMC_DIR", "U1.9", "U5.18")     # GPIO7
-# DRV_ENN has no internal pull. 10k to 3V3 against the RP2040's ~50k reset
+connect("TMC_STEP", "U1.9", "U5.17")    # GPIO6
+connect("TMC_DIR", "U1.10", "U5.18")     # GPIO7
+# DRV_ENN has no internal pull. 10k to 3V3 against the MCU's ~50k reset
 # pull-down holds 2.75 V (VIH 0.7 x VCC_IO = 2.31 V): outputs stay off
 # until firmware drives GPIO8 low.
-connect("TMC_ENN", "U1.11", "U5.28", "R24.2")    # GPIO8
-connect("TMC_DIAG0", "U1.12", "U5.26", "R16.2")  # GPIO9
+connect("TMC_ENN", "U1.12", "U5.28", "R24.2")    # GPIO8
+connect("TMC_DIAG0", "U1.13", "U5.26", "R16.2")  # GPIO9
 connect("TMC_DIAG1", "U1.28", "U5.27", "R17.2")  # GPIO17
 # SD_MODE low (10k pull-down, GPIO18 left as input): internal ramp generator,
 # with the ENC pins as encoder inputs. GPIO18 high selects external
@@ -351,8 +357,10 @@ groups.append({"name": "driver_supply", "stages": [
     ["C25", "C27", "R23", "C28", "C26"],
 ]})
 
-unused_gpio = ["U1.2", "U1.3", "U1.30", "U1.31", "U1.32", "U1.34",
-               "U1.35", "U1.36", "U1.39", "U1.40", "U1.41"]
+unused_gpio = ["U1.2", "U1.3", "U1.31", "U1.32", "U1.33", "U1.34",
+               "U1.35", "U1.36", "U1.41", "U1.42", "U1.43"]
+# QSPI_SCLK, SD0..SD3: shared with the in-package flash, left open.
+unused_qspi = ["U1.55", "U1.56", "U1.57", "U1.58", "U1.59"]
 
 circuit = {
     "version": 1,
@@ -361,7 +369,7 @@ circuit = {
     "nets": [{"name": n, "pins": p} for n, p in nets.items()],
     "groups": groups,
     "power": {"VBUS": {"style": "label"}, "VM": {"style": "label"}},
-    "no_connect": ["J1.A8", "J1.B8", "U2.4", *unused_gpio],
+    "no_connect": ["J1.A8", "J1.B8", "U2.4", *unused_gpio, *unused_qspi],
 }
 
 json.dump(circuit, sys.stdout, indent=1)
