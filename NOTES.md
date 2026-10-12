@@ -261,9 +261,10 @@ Pipeline: `pcb-place`, `pcb-route`, `pcb-fill`, `pcb-dsn`, `pcb-autoroute`,
 `pcb-ses`, `pcb-gnd`, `pcb-drc`. The power stage and VM distribution are
 hand-routed (locked); freerouting 2.1.0 routes the signals with 0.15 mm
 rules and 0.5 mm vias in about four minutes for 30 passes. Over six
-placement variants it never got below about 25 open signal connections
-of 142; its result also varies by about 10 between runs on similar
-inputs. The open ones cluster at U5's left edge (12VOUT, 5VOUT, CB1,
+placement variants it never got below about 20 open signal connections
+of 142 (the committed board: 21 after 60 passes, plus 30 GND pads and
+islands the stitching could not reach); its result also varies by about
+10 between runs on similar inputs. The open ones cluster at U5's left edge (12VOUT, 5VOUT, CB1,
 SRAH), its right edge (CPO, CPI, VCP, CA2, ENN, DIAG, ENCN), a few gate
 lines where the FET lead row meets the sense resistor links, and U1's
 bottom edge (encoder, SWD, crystal). `pcb-gnd` then stitches the GND

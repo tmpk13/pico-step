@@ -9,7 +9,7 @@ Dense routing cuts the GND pours into islands; the grid ties the islands
 of both layers together, the pad mode rescues single pads, and prune
 removes vias that ended up touching copper on one layer only. A spot is
 used only if it keeps the default clearance from every other net's
-copper, 0.9 mm from any plated hole, stays out of the VM pour and 0.75 mm
+copper, hole to hole 0.4 mm from any plated hole, stays out of the VM pour and 0.75 mm
 from the edge and the mounting holes. Refill the zones and rerun DRC
 after each step.
 """
@@ -27,7 +27,7 @@ BOARD = "pico-step.kicad_pcb"
 VIA_SIZE, VIA_DRILL, TRACK_W, CLEAR = 0.5, 0.3, 0.25, 0.15
 EDGE = (79.0, 79.0, 121.0, 121.0)
 HOLES = [(84.5, 84.5), (115.5, 84.5), (84.5, 115.5), (115.5, 115.5)]
-GRID = 2.0
+GRID = 1.5
 
 
 def mm(v: float) -> int:
@@ -62,17 +62,17 @@ class Checker:
             for p in f.Pads():
                 pos = p.GetPosition()
                 if p.GetAttribute() == pcbnew.PAD_ATTRIB_PTH or p.GetAttribute() == pcbnew.PAD_ATTRIB_NPTH:
-                    self.holes.append((pos.x / 1e6, pos.y / 1e6))
+                    self.holes.append((pos.x / 1e6, pos.y / 1e6, p.GetDrillSize().x / 1e6))
                 if p.GetNetname() == net:
                     continue
                 sz = pad_size(p)
-                r = max(sz.x, sz.y) / 2e6
+                r = math.hypot(sz.x, sz.y) / 2e6     # bounding circle of the (rotated) pad
                 layers = both if p.GetAttribute() == pcbnew.PAD_ATTRIB_PTH else {p.GetLayer()}
                 self.items.append((layers, "pt", (pos.x / 1e6, pos.y / 1e6), r))
         for t in board.GetTracks():
             if t.GetClass() == "PCB_VIA":
                 pos = t.GetPosition()
-                self.holes.append((pos.x / 1e6, pos.y / 1e6))
+                self.holes.append((pos.x / 1e6, pos.y / 1e6, t.GetDrill() / 1e6))
                 if t.GetNetname() != net:
                     self.items.append((both, "pt", (pos.x / 1e6, pos.y / 1e6), t.GetWidth() / 2e6))
             elif t.GetNetname() != net:
@@ -102,13 +102,13 @@ class Checker:
             return False
         if any(x0 - 0.3 < x < x1 + 0.3 and y0 - 0.3 < y < y1 + 0.3 for x0, y0, x1, y1 in self.keepouts):
             return False
-        if any(math.hypot(x - hx, y - hy) < 0.9 for hx, hy in self.holes):
+        if any(math.hypot(x - hx, y - hy) < hd / 2 + VIA_DRILL / 2 + 0.4 for hx, hy, hd in self.holes):
             return False
         return self.clearance(x, y, {pcbnew.F_Cu, pcbnew.B_Cu}) >= VIA_SIZE / 2 + CLEAR
 
     def add_via(self, x: float, y: float) -> None:
         self.items.append(({pcbnew.F_Cu, pcbnew.B_Cu}, "pt", (x, y), VIA_SIZE / 2))
-        self.holes.append((x, y))
+        self.holes.append((x, y, VIA_DRILL))
 
 
 def new_via(board: pcbnew.BOARD, net, x: float, y: float) -> None:
@@ -164,7 +164,7 @@ def pads(board: pcbnew.BOARD, report: str) -> int:
             layer = pcbnew.F_Cu if side == "F" else pcbnew.B_Cu
             px, py = pad.GetPosition().x / 1e6, pad.GetPosition().y / 1e6
             sz = pad_size(pad)
-            reach = max(sz.x, sz.y) / 2e6 + VIA_SIZE / 2 + CLEAR + 0.1
+            reach = math.hypot(sz.x, sz.y) / 2e6 + VIA_SIZE / 2 + CLEAR + 0.1
             placed = False
             for dist in (reach, reach + 0.4, reach + 0.8, reach + 1.2):
                 for k in range(8):
