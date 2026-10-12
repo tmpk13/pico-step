@@ -1,18 +1,23 @@
 # TODO
 
-- [ ] TMC2240 footprint exposed pad: confirm T3255-5 EP size against Maxim
-      outline 21-0140 / land pattern 90-0013 (not in the TMC2240 data sheet;
-      `ref/` has only the data sheet). Footprint currently copies T3255-3
-      (EP 3.1 x 3.1 mm); update `STOCK_COPIES` in `tools/footprints.py`.
-- [ ] PCB: TLE5012B on the motor shaft axis, diametric magnet; TMC2240 EP
-      with many GND vias, VS caps at the VS pins.
-- [ ] PCB: "Update PCB from Schematic" for the swap back to the RP2040
-      (ESP32-C5, RF section, FL1_rf, J5_rf and the 48 MHz crystal leave;
-      RP2040 QFN-56, W25Q128 U4, 12 MHz Y1 and R14 arrive). Placement was done
-      on the ESP32-C5 netlist; refs C3..C28, R3..R8, L1..L4 changed meaning.
-      `tests/test_refs.py` fails until the board matches.
-- [ ] Check stock for the four passives new to the RP2040 list (DIGIKEY.md).
+- [ ] PCB: "Update PCB from Schematic" for the RP2040 swap-back and the
+      TMC5160A driver (ESP32-C5, RF section, FL1_rf, J5_rf, 48 MHz crystal
+      and the TMC2240 leave; RP2040, W25Q128 U4, 12 MHz Y1, R14, U5
+      TMC5160A, Q1..Q8, C27..C35 and R18..R26 arrive). Refs C3..C28,
+      R3..R8, R15..R17, L1..L4 changed meaning. `tests/test_refs.py` fails
+      until the board matches.
+- [ ] PCB: TLE5012B on the motor shaft axis, diametric magnet.
+- [ ] PCB power stage: FETs and C33/C34 tight around each half bridge, R15/R18
+      Kelvin traces to SRAL/SRBL, short gate and BM traces, C21/C23 at the
+      VS/VCP pins, C27 to GNDA, many vias under the U5 exposed pad. Check
+      BM undershoot stays above -5 V (data sheet section 3.4).
+- [ ] Decide VM overvoltage handling for regenerative braking at 48 V (no
+      clamp fitted; a TVS standing off 48 V clamps above the 60 V maximum).
+- [ ] Confirm the motor current target. RSENSE 0.1 gives 2.3 A RMS full
+      scale; more needs lower RSENSE and a connector rated above 3 A.
+- [ ] Check stock for the resistors not searched (DIGIKEY.md).
 - [ ] Settle the hand edits that differ from `tools/circuit.py`
       (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and
-      TMC2240 DIAG0/DIAG1 not wired to RP2040 GPIO12/GPIO28 ("Selectable?"
-      note; their global labels at U1 are unconnected). Then update one or the other.
+      TMC5160 DIAG0/DIAG1 not wired to RP2040 GPIO9/GPIO17 ("Selectable?"
+      note; their global labels at U1 are unconnected). Then update one or
+      the other.

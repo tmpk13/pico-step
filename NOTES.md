@@ -27,32 +27,62 @@ footprint copy with "SH" pads, and `tests/test_footprints.py` checks that
 every circuit pin exists as a pad on the named footprint and vice versa.
 
 ## Power
-Logic is USB powered (VBUS -> AP2112K-3.3). Motor supply VM enters on J2 and
-is not tied to VBUS; VM_SENSE (100k/10k, 36 V -> 3.27 V) lets firmware see it.
+Logic is USB powered (VBUS -> AP2112K-3.3). Motor supply VM enters on J2,
+is not tied to VBUS, and runs up to 48 V. VM_SENSE (100k/5.6k) puts 48 V at
+2.55 V and reaches the 3.3 V ADC limit only at 62 V, past the driver's
+60 V absolute maximum. Every part on VM is rated 63 V or more.
 
-## TMC2240 TQFN32 pin table
-pdftotext of the Pin Description table shifts the TSSOP38 column into the
-TQFN32 column for PGND ("27, 31"), which would collide with SCK and STEP.
-The TQFN pin configuration drawing settles it: the TQFN has no PGND pins,
-ground is AGND (4) plus the exposed pad. Symbol pins are tested against the
-drawing in `tests/test_footprints.py`.
+## TMC5160A data sheet
+`ref/tmc5240.pdf` is the TMC5240 (36 V, integrated FETs), not the TMC5160.
+The TMC5160A data sheet rev 1.18 was downloaded from analog.com into
+`ref/tmc5160a_datasheet.pdf` (analog.com resets plain curl requests; a
+browser user agent and Accept header got through).
+The TMC2240 version of the board (36 V, integrated FETs) is commit d537741.
+C21..C26 and R15..R17 kept their numbers but are different parts now.
 
-## TMC2240 pin strapping
-- CLK (30) to GND: internal clock. UART_EN (10) to GND: SPI. AIN (2) to GND.
-- SLEEPN (25) on GPIO18. Its internal pull-down keeps the driver asleep
-  while the RP2040 is in reset; register contents are lost in sleep.
-- DRV_ENN (9) has an internal pull-up, so outputs are off until firmware
-  drives GPIO8 low.
-- DIAG0/DIAG1 get 10k pull-ups so open-drain mode works.
-- OV (13) left open: no brake chopper.
-- ENCA/ENCB/ENCN share the TLE5012B IFA/IFB/IFC nets with GPIO14..16, so the
-  sensor can be switched to IIF and counted by the driver directly.
+## TMC5160A at 48 V
+- Operating range: VS 10..55 V, VSA 10..50 V; absolute maximum 60 V
+  (64 V short peaks). Keep the supply at or below 50 V with VSA tied to VS.
+- VSA is tied to VS (standard circuit, Figure 3.1). Section 3.2 allows that
+  at 48 V when MOSFET Qg < 50 nC, chopper <= 40 kHz and the clock is the
+  internal 12 MHz. Estimated regulator dissipation at 48 V: 12 V regulator
+  36 V x (8 x 16 nC x 40 kHz) = 0.2 W (limit 0.5 W), 5 V regulator
+  43 V x 10 mA = 0.45 W (limit 1 W). An external 12 V gate supply on
+  VSA/12VOUT (Figure 3.2) is the fallback if the IC runs hot.
+- No overvoltage clamp on VM. A TVS that stands off 48 V clamps above the
+  60 V maximum, so regenerative energy (fast deceleration, driver disabled
+  while the motor spins) must go into the supply or a brake circuit.
 
-## TMC2240 package
-DigiKey describes it only as "TQFN"; the data sheet says TQFN32 5x5,
-package code T3255+5C. KiCad ships T3255-3/-6/-9 patterns but not -5, and
-they differ only in the exposed pad. The project copy uses T3255-3 until
-21-0140 is checked.
+## MOSFETs and sense resistors
+- CSD19537Q3: 100 V (48 V plus margin for ringing), 12.1 mOhm, Qg 16 nC,
+  Qgd 2.9 nC. Miller charge under 10 nC runs at DRVSTRENGTH=0 with no gate
+  resistor (section 3.3); bootstrap 220 nF for Qg < 20 nC (Figure 3.1).
+  Pinout checked against TI's top view: 1-3 S, 4 G, 5-8 and tab D, which is
+  the stock symbol and NexFET footprint numbering.
+- RSENSE 0.1 Ohm: 2.3 A RMS / 3.3 A peak at full scale (data sheet table,
+  chapter 9). Chosen to stay inside the JST XH motor header's 3 A rating;
+  firmware sets the actual current with GLOBALSCALER and IRUN. More current
+  needs a lower RSENSE and a bigger motor connector. Standstill peak
+  dissipation 1.1 W, so 3 W 2512 parts.
+- 12VOUT uses a 1206 X7R 10 uF 25 V: at 12 V bias an 0805 10 uF keeps too
+  little of its value for the ">= 10x one bootstrap capacitor" rule.
+
+## TMC5160A pin strapping
+- SPI_MODE (22) high: SPI. TST_MODE (11) and CLK (12) to GND.
+- SD_MODE (21) is on GPIO18 (freed by the TMC2240's SLEEPN) with a 10k
+  pull-down. Low: internal ramp generator, ENCA/ENCB/ENCN are encoder
+  inputs, REFL/REFR are reference switch inputs. High: STEP/DIR on GPIO6/7,
+  and the same ENC pins become DcStep enable, DcStep gating and the DCO
+  output. The data sheet only describes SD_MODE as a strap; whether it can
+  change while VCC is up is untested, so set it before VM comes up.
+- ENCN_DCO is an output with SD_MODE high, so it reaches the TLE5012B IFC
+  net through 1k. With SD_MODE high keep the TLE5012B IIF outputs off, or
+  IFB enables DcStep.
+- DRV_ENN (28) has no internal pull (the TMC2240's did). 10k to 3V3 against
+  the RP2040's ~50k reset pull-down holds 2.75 V, above VIH = 0.7 x VCC_IO
+  = 2.31 V, so the bridges stay off until firmware drives GPIO8 low.
+- DIAG0/DIAG1 keep 10k pull-ups (open drain needs 47k or less).
+- The exposed pad is pin 49 (GNDD/GNDP, low side gate driver ground).
 
 ## MCU choice
 The board went RP2040 -> ESP32-C5HF4 -> RP2040. The ESP32-C5 version
@@ -78,6 +108,20 @@ block's PWR_FLAGs (they clash with the AP2112K output), and keep one power
 symbol per stacked supply pin (IOVDD x6, DVDD x2). TLE5012B labels at R9/R11
 were renamed SPI_SCK -> ENC_SCK and SPI_MOSI -> ENC_DATA for the RP2040
 SPI1 wiring.
+
+The TMC2240 -> TMC5160A swap was done the same way: 107 items of the old
+driver block removed by cluster, the three ENC_IFx wires to U3 cut back to
+global-label stubs at U3, the new block laid out alone with kicad-vis and
+pasted at (465, 88) mm. The sheet went from A2 to A1 so nothing existing had
+to move. Paste details that differ from the RP2040 paste: kicad-vis draws a
+net that crosses the block boundary as a local label, and a boundary net
+with two pins inside the block (TMC_ENN: U5 and its pull-up) as a bare wire
+with no label at all, which would silently cut it from the MCU. Boundary
+labels were converted to global labels and TMC_ENN got one. kicad-vis also
+places a symbol's Reference/Value itself, over U5's top and bottom pin
+numbers, so they were moved outside the body corners after the paste. The
+hand edits survive: DIAG0/DIAG1 reach only their pull-ups ("Selectable?"
+note moved next to them) and VM stays split from J2.
 
 ## DigiKey list
 - eparts-search returns the reel (TR) variant of most passives; use the MPN in

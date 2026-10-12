@@ -17,13 +17,19 @@ classDiagram
         BOOTSEL, RESET, SWD J3
         LED GPIO25
     }
-    class TMC2240_U5 {
+    class TMC5160A_U5 {
         SPI0 GPIO2..5
-        STEP GPIO6, DIR GPIO7
-        ENN GPIO8, DIAG0 GPIO9, DIAG1 GPIO17
-        SLEEPN GPIO18
+        REFL_STEP GPIO6, REFR_DIR GPIO7
+        DRV_ENN GPIO8 10k pull-up
+        SD_MODE GPIO18 10k pull-down
+        DIAG0/DIAG1 10k pull-ups
         ENCA/B/N from TLE5012B IFA/IFB/IFC
-        RREF 12k
+        VSA tied to VS, internal 12V and 5V regulators
+    }
+    class Bridges_Q1_Q8 {
+        CSD19537Q3 x8, 100 V
+        Phase A Q1..Q4, phase B Q5..Q8
+        RSENSE 0.1R per phase, 2.3 A RMS full scale
     }
     class Motor_J4 {
         OUT1A OUT2A OUT1B OUT2B
@@ -35,18 +41,20 @@ classDiagram
         IFA/IFB/IFC GPIO14/15/16
     }
     class MotorSupply_J2 {
-        VM screw terminal
-        100u bulk
-        VM_SENSE divider to GPIO26 ADC0
+        VM screw terminal, up to 48 V
+        100u 63V bulk
+        VM_SENSE 100k/5.6k to GPIO26 ADC0
     }
     USB_C_J1 --> LDO_U2 : VBUS
     USB_C_J1 --> RP2040_U1 : USB 27R series
     LDO_U2 --> RP2040_U1 : +3V3
     LDO_U2 --> TLE5012B_U3 : +3V3
-    RP2040_U1 --> TMC2240_U5 : SPI0 + STEP/DIR
+    RP2040_U1 --> TMC5160A_U5 : SPI0 + STEP/DIR + SD_MODE
     TLE5012B_U3 --> RP2040_U1 : angle (SSC)
-    MotorSupply_J2 --> TMC2240_U5 : VM
-    TLE5012B_U3 --> TMC2240_U5 : IIF encoder
-    TMC2240_U5 --> Motor_J4 : coils
+    MotorSupply_J2 --> TMC5160A_U5 : VM (VS, VSA)
+    MotorSupply_J2 --> Bridges_Q1_Q8 : VM
+    TLE5012B_U3 --> TMC5160A_U5 : IIF encoder
+    TMC5160A_U5 --> Bridges_Q1_Q8 : gate drive, sense
+    Bridges_Q1_Q8 --> Motor_J4 : coils
     MotorSupply_J2 --> RP2040_U1 : VM_SENSE
 ```

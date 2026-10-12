@@ -210,18 +210,6 @@ STOCK_COPIES = [
         {"S1": "SH"},
         None,
     ),
-    # TMC2240 TQFN32 is Maxim package T3255+5C (outline 21-0140, land
-    # pattern 90-0013); the TMC2240 data sheet references those drawings but
-    # does not include them. All T3255 variants share the 0.5 mm perimeter
-    # pads; only the exposed pad differs. This copies the T3255-3 pattern
-    # (3.1 mm exposed pad) until the T3255-5 exposed pad size is confirmed.
-    (
-        "Package_DFN_QFN.pretty/TQFN-32-1EP_5x5mm_P0.5mm_EP3.1x3.1mm_ThermalVias",
-        "Maxim_TQFN-32-1EP_5x5mm_P0.5mm_T3255-5",
-        {},
-        "Maxim T3255-5 TQFN-32 5x5mm P0.5mm for TMC2240. PROVISIONAL: copied from "
-        "T3255-3 (EP 3.1x3.1mm); verify exposed pad against Maxim 21-0140 / 90-0013",
-    ),
 ]
 
 
