@@ -4408,8 +4408,12 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "Q"
 				(at 5.08 1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -4419,6 +4423,8 @@
 			)
 			(property "Value" "Q_Dual_NMOS_S1G1S2G2D2D1"
 				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -4428,38 +4434,46 @@
 			)
 			(property "Footprint" ""
 				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(hide yes)
 				)
 			)
 			(property "Datasheet" "~"
 				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(hide yes)
 				)
 			)
 			(property "Description" "Dual NMOS transistor, 6 pin package"
 				(at 2.286 -12.192 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(hide yes)
 				)
 			)
 			(property "ki_keywords" "transistor NMOS N-MOS N-MOSFET"
 				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(hide yes)
 				)
 			)
 			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_0_1"
@@ -4630,6 +4644,24 @@
 				)
 			)
 			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_1_1"
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 				(pin input line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -4666,6 +4698,8 @@
 						)
 					)
 				)
+			)
+			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_2_1"
 				(pin passive line
 					(at 2.54 -5.08 90)
 					(length 2.54)
@@ -4676,7 +4710,7 @@
 							)
 						)
 					)
-					(number "1"
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4684,8 +4718,6 @@
 						)
 					)
 				)
-			)
-			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_2_1"
 				(pin input line
 					(at -5.08 0 0)
 					(length 2.54)
@@ -4715,24 +4747,6 @@
 						)
 					)
 					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 -5.08 90)
-					(length 2.54)
-					(name "S"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -11376,6 +11390,15 @@
 		(pin "5"
 			(uuid "ac2d1b38-c604-5f54-8916-bd4b20a139ca")
 		)
+		(pin "1"
+			(uuid "3372b42d-febb-457a-8b36-da7ba4ad4ce0")
+		)
+		(pin "2"
+			(uuid "ee3a834f-3267-4d64-8765-6cf6a4b6db1b")
+		)
+		(pin "6"
+			(uuid "ea264310-b3ca-4e4d-94e2-55ab653c3dd2")
+		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
@@ -13139,6 +13162,15 @@
 		(pin "6"
 			(uuid "4fd15cbd-0284-5e67-92a9-cefe2447e205")
 		)
+		(pin "3"
+			(uuid "0ae3ee6f-447f-4d9f-a13d-c22b52bf9ccc")
+		)
+		(pin "4"
+			(uuid "0e4298a2-ce3b-47cf-bdf9-a8710d5d2f53")
+		)
+		(pin "5"
+			(uuid "115d8fb2-cc92-4312-a815-4e4b16a88ef1")
+		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
@@ -14654,6 +14686,15 @@
 		(pin "6"
 			(uuid "bdd65d1f-5030-5062-9c8d-ff5c55477a8d")
 		)
+		(pin "3"
+			(uuid "368b398a-37fe-4e98-ba41-9a639a66bbcb")
+		)
+		(pin "4"
+			(uuid "339ec582-1203-42d3-acd7-99ea222596c5")
+		)
+		(pin "5"
+			(uuid "0aaef8d4-07c3-450d-a5f5-9012ebb1f3bc")
+		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
@@ -14911,6 +14952,15 @@
 		)
 		(pin "5"
 			(uuid "b3cf9981-e274-5f8f-81d5-02d8215b51bd")
+		)
+		(pin "1"
+			(uuid "d534bb32-66f0-4178-9706-14a573a3c92a")
+		)
+		(pin "2"
+			(uuid "1eb2c31d-ffba-4e1a-a7db-91f72d684716")
+		)
+		(pin "6"
+			(uuid "579ba79b-b3c8-4d57-8f5e-d7b4757c8315")
 		)
 		(instances
 			(project "pico-step"
@@ -16448,6 +16498,15 @@
 		)
 		(pin "6"
 			(uuid "1f321159-249c-5c5d-86b3-52c94bacab30")
+		)
+		(pin "3"
+			(uuid "62d6ab34-5d0e-4266-b92c-540f34d8b1e2")
+		)
+		(pin "4"
+			(uuid "d3291e92-2638-4914-8739-ebf7c9ae213d")
+		)
+		(pin "5"
+			(uuid "04c2e01c-779f-435d-aae4-39150a576c16")
 		)
 		(instances
 			(project "pico-step"
@@ -20937,6 +20996,15 @@
 		(pin "5"
 			(uuid "f4869239-7cae-5240-a64d-75a9967ea005")
 		)
+		(pin "1"
+			(uuid "c682ddc5-5753-4640-bd74-ff2ed64257ee")
+		)
+		(pin "2"
+			(uuid "fdb43225-b45c-4255-81c3-c63b6830d9fc")
+		)
+		(pin "6"
+			(uuid "42453fcf-d52a-43f9-a5b2-b7de221dd078")
+		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
@@ -21955,6 +22023,15 @@
 		)
 		(pin "6"
 			(uuid "7c17c6fc-918c-5d0c-b784-da3e7a7a7dac")
+		)
+		(pin "3"
+			(uuid "ddd372c7-54e3-49f9-a3a5-4ccb45fc74a5")
+		)
+		(pin "4"
+			(uuid "c19206c2-7429-41e0-9a72-527247a37916")
+		)
+		(pin "5"
+			(uuid "3345bc33-62b5-4cf0-92a3-7bdb2922c992")
 		)
 		(instances
 			(project "pico-step"
@@ -24964,6 +25041,15 @@
 		)
 		(pin "5"
 			(uuid "f4c0f7ca-a9d6-54cc-bd71-075d2478f20c")
+		)
+		(pin "1"
+			(uuid "e5892947-197e-4f1e-b85b-f0e5140c47ff")
+		)
+		(pin "2"
+			(uuid "8cc5a33b-5884-449c-a54b-f17cb5dbed8e")
+		)
+		(pin "6"
+			(uuid "d6fd5f12-e705-49c8-a68a-c8459cbbc5b5")
 		)
 		(instances
 			(project "pico-step"
