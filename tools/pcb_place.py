@@ -21,20 +21,20 @@ BOARD = "pico-step.kicad_pcb"
 PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     # ---- connectors and buttons (edges) ---------------------------------
     "J4": (97.00, 82.00, 0, "F"),        # motor, top edge
-    "SW1": (90.50, 82.50, 90, "F"),      # BOOTSEL, top left corner
-    "SW2": (109.90, 82.50, 90, "F"),     # RESET, top right corner
+    "SW1": (90.50, 82.15, 90, "F"),      # BOOTSEL, top left corner
+    "SW2": (109.90, 82.15, 90, "F"),     # RESET, top right corner
     "J1": (117.25, 92.80, 90, "F"),      # USB-C, right edge beside the FET row
-    "J2": (95.60, 115.25, 180, "F"),     # VM screw terminal, bottom edge
+    "J2": (95.60, 115.35, 180, "F"),    # VM screw terminal, bottom edge
     "J3": (106.70, 119.30, 90, "F"),     # SWD, bottom edge right
     "D1": (108.30, 114.00, 90, "F"),
     "R8": (106.30, 114.00, 90, "F"),
     # ---- angle sensor, back side at the shaft axis ----------------------
     "U3": (100.00, 100.00, 180, "B"),
-    "C18": (94.60, 100.00, 90, "B"),
-    "R9": (104.65, 97.40, 90, "B"),
-    "R10": (104.65, 100.50, 90, "B"),
-    "R11": (106.30, 97.40, 90, "B"),
-    "R14": (106.30, 100.50, 90, "B"),
+    "C18": (95.30, 100.00, 90, "B"),
+    "R9": (93.00, 100.20, 90, "B"),
+    "R10": (93.00, 104.00, 90, "B"),
+    "R11": (91.00, 100.20, 90, "B"),
+    "R14": (91.00, 104.00, 90, "B"),
     # ---- power stage ------------------------------------------------------
     # FET row under the motor connector, leads toward the driver.
     "Q3": (90.20, 89.80, 0, "F"),        # phase B, half bridge 1
@@ -42,37 +42,37 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "Q1": (102.60, 89.80, 0, "F"),       # phase A, half bridge 1
     "Q2": (108.80, 89.80, 0, "F"),       # phase A, half bridge 2
     "R18": (94.60, 97.00, 0, "F"),       # RSENSE B, hot end left
-    "R15": (108.50, 96.50, 0, "F"),      # RSENSE A, hot end left
-    "U5": (103.90, 104.80, 0, "F"),      # thermal vias clear of U3 on the back
+    "R15": (108.50, 96.30, 0, "F"),      # RSENSE A, hot end left
+    "U5": (103.90, 105.00, 0, "F"),     # thermal vias clear of U3 on the back
     "C19": (85.00, 103.20, 90, "F"),     # J2 side bulk, left edge
     "C35": (115.30, 106.50, -90, "F"),   # VM bulk, right edge, VM pad up
-    "C34": (87.00, 96.50, 90, "B"),      # bridge B VM decoupling
-    "C33": (110.50, 96.50, 90, "B"),     # bridge A VM decoupling
-    "C32": (97.50, 95.30, 90, "B"),      # bootstrap CB2
-    "C29": (105.80, 94.30, 90, "B"),     # bootstrap CA1
+    "C34": (84.40, 94.60, -90, "B"),     # bridge B VM decoupling, VM pad up
+    "C33": (107.20, 99.60, -90, "B"),   # bridge A VM decoupling below R15, VM pad up
+    "C32": (100.50, 95.00, 90, "B"),     # bootstrap CB2
+    "C29": (111.90, 97.50, 90, "B"),     # bootstrap CA1
     # left of U5 (top)
     "C31": (97.10, 100.40, 0, "F"),      # bootstrap CB1
-    "C25": (97.30, 103.60, 90, "F"),     # 12VOUT
-    "C21": (97.10, 107.00, 0, "F"),      # VS
-    "C27": (96.90, 109.00, 0, "F"),      # 5VOUT
-    "R20": (92.50, 100.50, 0, "F"),      # 47R SRAL
-    "R22": (92.50, 102.40, 0, "F"),      # 47R SRBL
-    "R19": (92.50, 104.30, 0, "F"),      # 47R SRAH
-    "R21": (92.50, 106.20, 0, "F"),      # 47R SRBH
-    "R23": (92.50, 108.10, 0, "F"),      # 2.2R 5VOUT-VCC
+    "C25": (96.60, 103.60, 90, "F"),     # 12VOUT
+    "C21": (97.10, 107.50, 0, "F"),      # VS, VM pad left
+    "C27": (92.50, 107.80, 0, "F"),      # 5VOUT
+    "R20": (92.50, 103.90, 0, "F"),      # 47R SRAL
+    "R22": (92.50, 105.80, 0, "F"),      # 47R SRBL
+    "R19": (92.50, 100.10, 0, "F"),      # 47R SRAH
+    "R21": (92.50, 102.00, 0, "F"),      # 47R SRBH
+    "R23": (105.80, 108.30, 0, "B"),     # 2.2R 5VOUT-VCC, below the U5 back pad
     # below U5 (top)
-    "C26": (103.00, 110.90, 0, "F"),     # VCC_IO
-    "R25": (106.40, 110.90, 0, "F"),     # SD_MODE pull-down
+    "C26": (103.00, 111.10, 0, "F"),    # VCC_IO
+    "R25": (106.40, 111.10, 0, "F"),    # SD_MODE pull-down
     # right of U5 (back side)
-    "C30": (109.70, 100.50, 90, "B"),    # bootstrap CA2
-    "C23": (111.90, 100.50, 90, "B"),    # VCP-VS
-    "C22": (109.70, 103.60, 90, "B"),    # VSA
-    "C24": (111.90, 103.60, 90, "B"),    # CPI-CPO
-    "C28": (109.70, 106.70, 90, "B"),    # VCC
-    "R24": (111.90, 106.70, 90, "B"),    # ENN pull-up
+    "C30": (109.80, 100.50, 90, "B"),   # bootstrap CA2
+    "C23": (111.90, 100.70, -90, "B"),   # VCP-VS, VM pad up
+    "C22": (109.70, 105.60, -90, "B"),   # VSA, VM pad up
+    "C24": (111.90, 103.80, 90, "B"),    # CPI-CPO
+    "C28": (111.90, 106.90, 90, "B"),    # VCC
+    "R24": (113.80, 101.00, 90, "B"),    # ENN pull-up
     "R16": (115.60, 109.50, 90, "B"),    # DIAG0 pull-up
-    "R17": (108.00, 100.50, 90, "B"),    # DIAG1 pull-up
-    "R26": (108.00, 105.00, 90, "B"),    # 1k ENCN
+    "R17": (113.80, 104.50, 90, "B"),    # DIAG1 pull-up
+    "R26": (107.90, 104.50, 90, "B"),    # 1k ENCN
     # ---- MCU block, back side -------------------------------------------
     "U1": (104.00, 113.30, 90, "B"),     # SPI pins on the bottom edge
     "C12": (110.60, 109.30, 0, "B"),     # COUT
@@ -80,23 +80,23 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "R27": (113.60, 108.80, 90, "B"),
     "C11": (109.70, 113.80, 0, "B"),     # CIN
     "C17": (112.70, 111.90, 90, "B"),    # VREG_AVDD
-    "C9": (109.70, 115.90, 0, "B"),
-    "C7": (103.20, 108.30, 0, "B"),
-    "C8": (106.40, 108.30, 0, "B"),
-    "C14": (100.50, 107.60, 90, "B"),    # +1V1 near pin 39
-    "C6": (97.80, 109.00, 0, "B"),
-    "C36": (95.40, 108.30, 90, "B"),     # +1V1 near pin 23
+    "C9": (109.70, 115.70, 0, "B"),
+    "C7": (93.00, 119.80, 0, "B"),
+    "C8": (108.10, 107.60, 90, "B"),
+    "C14": (100.50, 105.40, 90, "B"),   # +1V1 near pin 39
+    "C6": (97.90, 110.30, 0, "B"),
+    "C36": (95.40, 108.60, 90, "B"),     # +1V1 near pin 23
     "C15": (100.30, 117.60, 0, "F"),     # crystal on the top side, vias to pins 21/22
     "Y1": (101.30, 114.50, 0, "F"),
-    "C5": (95.50, 111.50, 90, "B"),
+    "C5": (95.50, 111.70, 90, "B"),
     "C16": (103.30, 117.60, 0, "F"),
-    "C10": (94.20, 118.70, 90, "B"),
+    "C10": (93.00, 116.90, 90, "B"),
     "R5": (104.50, 114.50, 90, "F"),
-    "C3": (96.80, 119.60, 0, "B"),
-    "C4": (99.90, 119.60, 0, "B"),
-    "C13": (103.00, 119.60, 0, "B"),     # +1V1 near pin 6
-    "R3": (113.80, 99.30, 90, "B"),      # USB series, on the way from J1
-    "R4": (113.80, 102.50, 90, "B"),
+    "C3": (96.10, 119.60, 0, "B"),
+    "C4": (99.20, 119.60, 0, "B"),
+    "C13": (102.30, 119.60, 0, "B"),     # +1V1 near pin 6
+    "R3": (110.00, 117.40, 0, "B"),      # USB series at U1
+    "R4": (112.40, 117.00, 90, "B"),
     "R6": (90.50, 80.70, 0, "B"),        # BOOTSEL 1k under SW1
     "R7": (109.90, 80.70, 0, "B"),       # RUN pull-up under SW2
     "R12": (90.80, 111.50, 0, "B"),      # VM sense divider at J2 pin 1

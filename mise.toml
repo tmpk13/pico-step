@@ -46,3 +46,41 @@ run = "kicad-cli sch erc --severity-error --exit-code-violations -o build/erc.rp
 [tasks.test]
 description = "Run tests"
 run = "pytest -q --tb=short tests"
+
+[tasks.pcb-place]
+description = "Apply the placement table in tools/pcb_place.py to pico-step.kicad_pcb (overwrites GUI moves)"
+run = "python3 tools/pcb_place.py"
+
+[tasks.pcb-route]
+description = "Pre-route the power stage and VM pour (removes all tracks first, run only before autorouting)"
+run = "python3 tools/pcb_route.py"
+
+[tasks.pcb-fill]
+description = "Refill the copper zones of pico-step.kicad_pcb"
+run = "python3 tools/pcb_fill.py"
+
+[tasks.pcb-dsn]
+description = "Export build/pico-step.dsn for freerouting"
+run = "python3 -c \"import pcbnew; b = pcbnew.LoadBoard('pico-step.kicad_pcb'); pcbnew.ExportSpecctraDSN(b, 'build/pico-step.dsn')\""
+
+[tasks.pcb-autoroute]
+description = "Route build/pico-step.dsn with freerouting into build/pico-step.ses (FREEROUTING points at the launcher or jar)"
+env = { FREEROUTING = "{{env.FREEROUTING | default(value='freerouting')}}" }
+run = "$FREEROUTING -de build/pico-step.dsn -do build/pico-step.ses -mp 20 -da -dl"
+
+[tasks.pcb-ses]
+description = "Import build/pico-step.ses into the board and refill the zones"
+run = ["python3 tools/pcb_ses.py build/pico-step.ses", "python3 tools/pcb_fill.py"]
+
+[tasks.pcb-drc]
+description = "Run KiCad DRC on the board"
+run = "kicad-cli pcb drc --severity-error --exit-code-violations -o build/drc.rpt pico-step.kicad_pcb"
+
+[tasks.pcb-render]
+description = "Render both sides of the board to build/pcb-top.png and build/pcb-bottom.png"
+run = [
+    "kicad-cli pcb export svg -o build/pcb-top.svg --layers Edge.Cuts,F.Cu,F.SilkS,F.Fab --page-size-mode 2 --exclude-drawing-sheet pico-step.kicad_pcb",
+    "kicad-cli pcb export svg -o build/pcb-bottom.svg --layers Edge.Cuts,B.Cu,B.SilkS,B.Fab --page-size-mode 2 --exclude-drawing-sheet --mirror pico-step.kicad_pcb",
+    "inkscape build/pcb-top.svg --export-type=png --export-filename=build/pcb-top.png --export-width=1500",
+    "inkscape build/pcb-bottom.svg --export-type=png --export-filename=build/pcb-bottom.png --export-width=1500",
+]
