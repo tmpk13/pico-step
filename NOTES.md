@@ -255,3 +255,31 @@ re-running it overwrites GUI moves.
 - Net-(J2-Pin_1) is still split from VM (see "Power?"): J2 pin 1 is wired
   to C19 only. The link to VM is one short trace from C19's + pad to the
   VM pour's left arm once the schematic decides.
+
+## Routing result
+Pipeline: `pcb-place`, `pcb-route`, `pcb-fill`, `pcb-dsn`, `pcb-autoroute`,
+`pcb-ses`, `pcb-gnd`, `pcb-drc`. The power stage and VM distribution are
+hand-routed (locked); freerouting 2.1.0 routes the signals with 0.15 mm
+rules and 0.5 mm vias in about four minutes for 30 passes. Over six
+placement variants it never got below about 25 open signal connections
+of 142; its result also varies by about 10 between runs on similar
+inputs. The open ones cluster at U5's left edge (12VOUT, 5VOUT, CB1,
+SRAH), its right edge (CPO, CPI, VCP, CA2, ENN, DIAG, ENCN), a few gate
+lines where the FET lead row meets the sense resistor links, and U1's
+bottom edge (encoder, SWD, crystal). `pcb-gnd` then stitches the GND
+islands the dense routing leaves behind.
+
+What helped most, in order: rules 0.15/0.15 instead of 0.2/0.2 (the
+router could not leave the 0.4 mm pitch QFN pads), turning U1 so its SPI
+pins face U5, 0.8 mm instead of 1.0 mm sense vias beside the gate pins,
+keeping the VM feed off the back under U5's right edge, and tightening
+the GND pour to 0.25 mm clearance. Removing the GND planes from the
+export, or the fixed pre-routes, made it worse.
+
+Finishing the board means closing the remaining connections in the
+KiCad editor (they are listed by `mise run pcb-drc-json` in
+build/drc.json under unconnected_items) or, more comfortably, going to
+four layers with GND and 3V3 inner planes, which also suits a 48 V
+chopper next to the MCU. The autorouted traces are freerouting quality:
+functional, with detours worth cleaning up by hand (RUN and SWDIO run
+along the bottom and right edges, USB D+/D- are not a tight pair).

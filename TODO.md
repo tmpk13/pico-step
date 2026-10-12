@@ -23,3 +23,11 @@
       TMC5160 DIAG0/DIAG1 not wired to MCU GPIO9/GPIO17 ("Selectable?"
       note; their global labels at U1 are unconnected). Then update one or
       the other.
+- [ ] PCB routing: close the connections freerouting left open (listed in
+      build/drc.json after `mise run pcb-drc-json`; NOTES.md, Routing
+      result), or move to a 4-layer stackup and reroute. Then clean up the
+      autorouted detours (RUN, SWDIO, USB pair), check the remaining
+      starved thermal reliefs and silk overlaps, and remove stitching vias
+      that landed in awkward spots.
+- [ ] PCB: the J2/C19 net is still split from VM (one short link from
+      C19's + pad to the VM pour's left arm once the schematic decides).

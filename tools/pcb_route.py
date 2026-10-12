@@ -95,6 +95,16 @@ class Router:
         self.board.Add(z)
 
 
+def gnd_zone_settings(board: pcbnew.BOARD) -> None:
+    """Tighten the GND pour so it reaches pads between dense traces."""
+    for z in board.Zones():
+        if z.GetNetname() == "GND":
+            z.SetLocalClearance(mm(0.25))
+            z.SetMinThickness(mm(0.25))
+            z.SetThermalReliefGap(mm(0.3))
+            z.SetThermalReliefSpokeWidth(mm(0.3))
+
+
 def clear(board: pcbnew.BOARD) -> None:
     for t in list(board.GetTracks()):
         board.Delete(t)
@@ -181,17 +191,17 @@ def route_fets(r: Router) -> None:
     r.track(F, [(x3, y3), (x3, 94.3), (rbx, 95.1), (rbx, rby)], 0.8, sb)
     x3, y3, _ = g["Q4"]["p3"]
     r.track(F, [(x3, y3), (x3, 93.6)], 0.4, sb)
-    r.via(x3, 93.6, sb, 1.0, 0.5)
+    r.via(x3, 93.6, sb, 0.8, 0.4)
     r.track(B, [(x3, 93.6), (x3, 94.6), (rbx, 96.6), (rbx, rby)], 0.8, sb)
     r.via(rbx, rby, sb, 1.0, 0.5)
     x3, y3, _ = g["Q1"]["p3"]
     r.track(F, [(x3, y3), (x3, 93.6)], 0.4, sa)
-    r.via(x3, 93.6, sa, 1.0, 0.5)
+    r.via(x3, 93.6, sa, 0.8, 0.4)
     r.track(B, [(x3, 93.6), (x3, 95.5), (rax, 95.5), (rax, ray)], 0.8, sa)
     r.via(rax, ray, sa, 1.0, 0.5)
     x3, y3, _ = g["Q2"]["p3"]
     r.track(F, [(x3, y3), (x3, 93.6)], 0.4, sa)
-    r.via(x3, 93.6, sa, 1.0, 0.5)
+    r.via(x3, 93.6, sa, 0.8, 0.4)
     r.track(B, [(x3, 93.6), (x3, 95.5), (rax, 95.5)], 0.8, sa)
 
 
@@ -203,24 +213,34 @@ def route_vm(r: Router) -> None:
     # left feed: pour -> VS pin 4 and its capacitor C21
     c21x, c21y, _ = r.pad("C21", "1")
     p4x, p4y, _ = r.pad("U5", "4")
-    r.track(B, [(87.0, 96.3), (87.0, 106.0), (94.6, 106.0), (95.0, 105.6)], 0.8, "VM")
-    r.via(95.0, 105.6, "VM")
-    r.track(F, [(95.0, 105.6), (c21x, c21y)], 0.5, "VM")
-    r.track(F, [(95.0, 105.6), (95.0, 106.3), (98.25, 106.3), (98.25, p4y)], 0.5, "VM")
-    r.track(F, [(98.25, p4y), (p4x - 0.4, p4y)], 0.3, "VM")
+    # along the back under the sensor resistors to a via right at pin 4,
+    # with a branch to the VS capacitor C21
+    r.track(B, [(87.0, 96.3), (87.0, 104.05), (98.0, 104.05), (98.4, p4y)], 0.8, "VM")
+    r.via(98.4, p4y, "VM")
+    r.track(F, [(98.4, p4y), (p4x - 0.4, p4y)], 0.3, "VM")
+    r.track(B, [(95.0, 104.05), (95.0, 106.3)], 0.6, "VM")
+    r.via(95.0, 106.3, "VM")
+    r.track(F, [(95.0, 106.3), (c21x, c21y)], 0.5, "VM")
     # right feed: pour -> C33, C23, C22, VSA pin 33 and the bulk cap C35
     c23x, c23y, _ = r.pad("C23", "1")
     c22x, c22y, _ = r.pad("C22", "1")
     p33x, p33y, _ = r.pad("U5", "33")
     c35x, _, _ = r.pad("C35", "1")
     c33x, c33y, _ = r.pad("C33", "1")
-    r.track(B, [(110.8, 92.9), (110.8, c23y), (c23x, c23y)], 0.6, "VM")
-    r.track(B, [(110.8, c33y), (c33x, c33y)], 0.8, "VM")
-    r.track(B, [(110.8, c23y), (110.8, c22y), (c22x, c22y)], 0.6, "VM")
-    r.track(B, [(110.8, p33y), (109.6, p33y)], 0.6, "VM")
-    r.via(109.6, p33y, "VM")
-    r.track(F, [(109.6, p33y), (p33x + 0.55, p33y)], 0.3, "VM")
-    r.track(F, [(109.6, p33y), (c35x - 1.0, p33y)], 1.0, "VM")
+    # Out of the pour through a via at its right end, then down the top
+    # layer between R15 and J1 (the back there must stay open for the
+    # charge pump parts), into a via that touches C23's VM pad, and on
+    # to VSA, C22 and C35.
+    r.via(112.2, 92.6, "VM")
+    r.track(F, [(112.2, 92.6), (112.55, 93.3), (112.55, 99.0), (112.9, 99.5)], 0.5, "VM")
+    r.via(112.9, 99.5, "VM")                       # touches C22's VM pad on the back
+    r.track(B, [(112.9, 99.5), (c22x, c22y)], 0.5, "VM")
+    r.track(F, [(112.9, 99.5), (112.9, 108.1), (110.3, 108.1)], 0.8, "VM")
+    r.via(110.3, 108.1, "VM")                      # touches C23's VM pad on the back
+    r.track(B, [(110.3, 108.1), (c23x, c23y)], 0.5, "VM")
+    r.track(F, [(112.9, p33y), (p33x + 0.55, p33y)], 0.3, "VM")
+    r.track(F, [(112.9, p33y), (c35x - 1.0, p33y)], 1.0, "VM")
+    r.track(B, [(112.9, 99.5), (112.3, 99.5), (111.3, 98.6), (c33x, c33y)], 0.5, "VM")
 
 
 def route_j2(r: Router) -> None:
@@ -235,6 +255,7 @@ def main() -> int:
     board = pcbnew.LoadBoard(BOARD)
     clear(board)
     r = Router(board)
+    gnd_zone_settings(board)
     n = fix_thermal_vias(r)
     route_fets(r)
     route_vm(r)

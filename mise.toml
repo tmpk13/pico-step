@@ -77,6 +77,23 @@ run = [
 description = "Import build/pico-step.ses into the board and refill the zones"
 run = ["python3 tools/pcb_ses.py build/pico-step.ses", "python3 tools/pcb_fill.py"]
 
+[tasks.pcb-gnd]
+description = "GND stitching: via grid, vias at pads the pour misses, prune dangling ones (needs build/drc.json from pcb-drc-json)"
+run = [
+    "python3 tools/pcb_gnd_vias.py grid",
+    "python3 tools/pcb_fill.py",
+    "kicad-cli pcb drc -o build/drc.json --format json --severity-all pico-step.kicad_pcb",
+    "python3 tools/pcb_gnd_vias.py pads build/drc.json",
+    "python3 tools/pcb_fill.py",
+    "kicad-cli pcb drc -o build/drc.json --format json --severity-all pico-step.kicad_pcb",
+    "python3 tools/pcb_gnd_vias.py prune build/drc.json",
+    "python3 tools/pcb_fill.py",
+]
+
+[tasks.pcb-drc-json]
+description = "Run KiCad DRC with every severity into build/drc.json"
+run = "kicad-cli pcb drc -o build/drc.json --format json --severity-all pico-step.kicad_pcb"
+
 [tasks.pcb-drc]
 description = "Run KiCad DRC on the board"
 run = "kicad-cli pcb drc --severity-error --exit-code-violations -o build/drc.rpt pico-step.kicad_pcb"

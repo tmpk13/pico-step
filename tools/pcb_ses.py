@@ -20,8 +20,17 @@ def main() -> int:
     if not pcbnew.ImportSpecctraSES(board, ses):
         print("import failed")
         return 1
+    # the session repeats the fixed wiring; drop those unlocked copies
+    locked = set()
+    for t in board.GetTracks():
+        if t.IsLocked():
+            locked.add((t.GetClass(), t.GetLayer(), tuple(t.GetStart()), tuple(t.GetEnd())))
+    dups = [t for t in board.GetTracks() if not t.IsLocked()
+            and (t.GetClass(), t.GetLayer(), tuple(t.GetStart()), tuple(t.GetEnd())) in locked]
+    for t in dups:
+        board.Delete(t)
     pcbnew.SaveBoard(BOARD, board)
-    print(f"tracks and vias: {before} -> {len(board.GetTracks())}")
+    print(f"tracks and vias: {before} -> {len(board.GetTracks())} ({len(dups)} duplicates of fixed wiring dropped)")
     return 0
 
 

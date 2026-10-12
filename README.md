@@ -19,6 +19,7 @@ mise run pcb-route # locked power stage copper and VM pour (before autorouting)
 mise run pcb-dsn   # build/pico-step.dsn for freerouting
 mise run pcb-autoroute # FREEROUTING=<launcher or jar> freerouting -> build/pico-step.ses
 mise run pcb-ses   # import the session and refill zones
+mise run pcb-gnd   # GND stitching vias after routing
 mise run pcb-drc
 mise run pcb-render # build/pcb-top.png, build/pcb-bottom.png
 ```

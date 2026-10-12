@@ -31,10 +31,10 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     # ---- angle sensor, back side at the shaft axis ----------------------
     "U3": (100.00, 100.00, 180, "B"),
     "C18": (95.30, 100.00, 90, "B"),
-    "R9": (93.00, 100.20, 90, "B"),
-    "R10": (93.00, 104.00, 90, "B"),
-    "R11": (91.00, 100.20, 90, "B"),
-    "R14": (91.00, 104.00, 90, "B"),
+    "R9": (93.00, 98.90, 90, "B"),
+    "R10": (93.00, 102.00, 90, "B"),
+    "R11": (91.00, 98.90, 90, "B"),
+    "R14": (91.00, 102.00, 90, "B"),
     # ---- power stage ------------------------------------------------------
     # FET row under the motor connector, leads toward the driver.
     "Q3": (90.20, 89.80, 0, "F"),        # phase B, half bridge 1
@@ -49,7 +49,7 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "C34": (84.40, 94.60, -90, "B"),     # bridge B VM decoupling, VM pad up
     "C33": (107.20, 99.60, -90, "B"),   # bridge A VM decoupling below R15, VM pad up
     "C32": (100.50, 95.00, 90, "B"),     # bootstrap CB2
-    "C29": (111.90, 97.50, 90, "B"),     # bootstrap CA1
+    "C29": (112.40, 97.50, 90, "B"),     # bootstrap CA1
     # left of U5 (top)
     "C31": (97.10, 100.40, 0, "F"),      # bootstrap CB1
     "C25": (96.60, 103.60, 90, "F"),     # 12VOUT
@@ -64,19 +64,19 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "C26": (108.80, 111.20, 90, "F"),   # VCC_IO
     "R25": (108.80, 114.30, 90, "F"),   # SD_MODE pull-down
     # right of U5 (back side)
-    "C30": (109.80, 100.50, 90, "B"),   # bootstrap CA2
-    "C23": (111.90, 100.70, -90, "B"),   # VCP-VS, VM pad up
-    "C22": (109.70, 105.60, -90, "B"),   # VSA, VM pad up
-    "C24": (111.90, 103.80, 90, "B"),    # CPI-CPO
-    "C28": (111.90, 106.90, 90, "B"),    # VCC
-    "R24": (113.80, 101.00, 90, "B"),    # ENN pull-up
+    "C30": (110.30, 100.50, 90, "B"),    # bootstrap CA2
+    "C23": (110.30, 106.70, 90, "B"),    # VCP-VS, VM pad down
+    "C22": (112.40, 100.70, -90, "B"),   # VSA, VM pad up
+    "C24": (110.30, 103.60, 90, "B"),    # CPI-CPO
+    "C28": (112.40, 103.80, 90, "B"),    # VCC
+    "R24": (114.10, 101.00, 90, "B"),    # ENN pull-up
     "R16": (115.60, 109.50, 90, "B"),    # DIAG0 pull-up
-    "R17": (113.80, 104.50, 90, "B"),    # DIAG1 pull-up
+    "R17": (114.10, 104.50, 90, "B"),    # DIAG1 pull-up
     "R26": (107.90, 104.50, 90, "B"),    # 1k ENCN
     # ---- MCU block, back side -------------------------------------------
     "U1": (100.90, 113.30, 180, "B"),   # SPI pins on the right side facing U5, regulator pins at the top left
     "C12": (94.30, 107.50, 180, "B"),   # COUT, +1V1 pad toward L1
-    "L1": (97.70, 107.60, 0, "B"),      # LX pad above pin 48
+    "L1": (97.70, 107.70, 0, "B"),      # LX pad above pin 48
     "R27": (95.80, 110.30, 90, "B"),
     "C11": (101.20, 108.30, 0, "B"),    # CIN
     "C17": (94.00, 109.90, 90, "B"),    # VREG_AVDD
@@ -105,7 +105,7 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     # ---- USB power, back side under J1 -----------------------------------
     "R1": (116.30, 91.50, 90, "B"),
     "R2": (116.30, 94.80, 90, "B"),
-    "U2": (116.80, 100.30, 0, "B"),
+    "U2": (117.10, 100.30, 0, "B"),
     "C2": (116.80, 103.40, 0, "B"),
     "C1": (116.80, 106.00, 0, "B"),
 }

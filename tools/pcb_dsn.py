@@ -26,7 +26,17 @@ def main() -> int:
     if not m:
         print("no VM plane in the export")
         return 1
-    s = s[: m.end()] + '\n    (keepout "VM_pour" (%s))' % m.group(1) + s[m.end():]
+    extra = ['    (keepout "VM_pour" (%s))' % m.group(1)]
+    # The router keeps no edge clearance from the outline circles of the
+    # mounting holes or the outer edge, so add 0.5 mm keepouts there.
+    for i, (x, y) in enumerate([(84.5, 84.5), (115.5, 84.5), (84.5, 115.5), (115.5, 115.5)]):
+        for layer in ("F.Cu", "B.Cu"):
+            extra.append('    (keepout "hole%d%s" (circle %s 4400 %d %d))' % (i, layer[0], layer, x * 1000, -y * 1000))
+    s = s[: m.end()] + "\n" + "\n".join(extra) + s[m.end():]
+    s, n = re.subn(r"\(boundary\s*\(path pcb 0[^()]*\)\s*\)",
+                   "(boundary (path pcb 0 79500 -79500 120500 -79500 120500 -120500 79500 -120500 79500 -79500))", s, count=1)
+    if n != 1:
+        print("warning: board outline not shrunk for the edge clearance")
     open(DSN, "w").write(s)
     print(f"wrote {DSN} with {s.count('(type fix)')} fixed wires and a VM keepout")
     return 0
