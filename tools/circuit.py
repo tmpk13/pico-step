@@ -24,8 +24,10 @@ nets: dict[str, list[str]] = {}
 groups: list[dict] = []
 
 
-def part(ref, lib_id, value, footprint, **fields):
+def part(ref, lib_id, value, footprint, unit=None, **fields):
     c = {"ref": ref, "lib_id": lib_id, "value": value, "footprint": footprint}
+    if unit is not None:
+        c["unit"] = unit
     if fields:
         c["fields"] = fields
     components.append(c)
@@ -226,25 +228,32 @@ groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13"
 # TMC5160A data sheet Figure 3.1 (Standard Application Circuit).
 #
 # VSA is tied to VS. At 48 V the internal 11.5 V and 5 V regulators then
-# dissipate roughly 0.2 W and 0.45 W (8 x 16 nC gates at a 40 kHz chopper,
-# 10 mA VCC at the internal 12 MHz clock), inside the 0.5 W and 1 W limits.
-# The data sheet allows this with gate charge under 50 nC, a chopper at or
-# below 40 kHz and no external clock above 12 MHz (section 3.2).
+# dissipate roughly 0.09 W and 0.45 W (8 x 8 nC max gates at a 40 kHz
+# chopper, 10 mA VCC at the internal 12 MHz clock), inside the 0.5 W and
+# 1 W limits. The data sheet allows this with gate charge under 50 nC, a
+# chopper at or below 40 kHz and no external clock above 12 MHz (section 3.2).
 #
-# CSD19537Q3: 100 V, 12.1 mOhm, Qg 16 nC, Qgd 2.9 nC. Miller charge under
-# 10 nC runs at DRVSTRENGTH=0 with no gate resistor (section 3.3), and
-# bootstrap capacitors of 220 nF suit Qg under 20 nC (Figure 3.1).
+# Q1..Q4 are SQJB68EP dual N-MOSFETs, one per half bridge: FET1 (unit 1,
+# S1=1, G1=2, D1=6) is the high side, FET2 (unit 2, S2=3, G2=4, D2=5) the
+# low side; S1 and D2 join on the board. 100 V, 92 mOhm max (162 mOhm at
+# 125 C), Qg 4.7 nC typ / 8 nC max, Qgd 1.3 nC. Miller charge under 10 nC
+# runs at DRVSTRENGTH=0 with no gate resistor (section 3.3), and bootstrap
+# capacitors of 220 nF suit Qg under 20 nC (Figure 3.1).
 #
-# RSENSE 0.10 Ohm gives 2.3 A RMS (3.3 A peak) at GLOBALSCALER=0, IRUN=31
-# (section 9), inside the 3 A rating of the JST XH motor header. Standstill
-# peak dissipation is 3.3^2 x 0.1 = 1.1 W per resistor (3 W parts).
-QFET = "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+# RSENSE 0.15 Ohm gives 1.6 A RMS (2.2 A peak) at GLOBALSCALER=0, IRUN=31
+# (section 9 table). The cap is set by the FETs, not the connector: at
+# standstill one low side FET can carry the peak continuously, 2.2^2 x
+# 0.15 = 0.7 W hot, about 60 C over ambient at 85 C/W. Sense resistor peak
+# dissipation is the same 0.7 W (2 W parts).
+QFET = "pico-step:Vishay_PowerPAK_SO-8L_Dual"
+QDUAL = "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1"
 part("U5", "pico-step:TMC5160A-TA", "TMC5160A-TA",
      "Package_QFP:TQFP-48-1EP_7x7mm_P0.5mm_EP5x5mm_ThermalVias",
      MPN="TMC5160A-TA", Manufacturer="Analog Devices")
-for i in range(1, 9):
-    part(f"Q{i}", "Transistor_FET:CSD19537Q3", "CSD19537Q3", QFET,
-         MPN="CSD19537Q3", Manufacturer="Texas Instruments")
+for i in range(1, 5):
+    for unit in (1, 2):
+        part(f"Q{i}", QDUAL, "SQJB68EP", QFET, unit=unit,
+             MPN="SQJB68EP-T1_BE3", Manufacturer="Vishay Siliconix")
 cap("C21", "100n 100V")         # VS pin
 cap("C22", "100n 100V")         # VSA pin
 cap("C23", "100n 100V")         # VCP to VS
@@ -260,10 +269,10 @@ cap("C32", "220n")              # bootstrap CB2
 cap("C33", "2.2u 100V", C1210)  # bridge A
 cap("C34", "2.2u 100V", C1210)  # bridge B
 part("C35", "Device:C_Polarized", "100u 63V", CP10)
-part("R15", "Device:R", "0.1", R2512, MPN="CRA2512-FZ-R100ELF", Manufacturer="Bourns")
+part("R15", "Device:R", "0.15", R2512, MPN="CSRN2512FTR150", Manufacturer="Stackpole")
 res("R16", "10k")
 res("R17", "10k")
-part("R18", "Device:R", "0.1", R2512, MPN="CRA2512-FZ-R100ELF", Manufacturer="Bourns")
+part("R18", "Device:R", "0.15", R2512, MPN="CSRN2512FTR150", Manufacturer="Stackpole")
 res("R19", "47")
 res("R20", "47")
 res("R21", "47")
@@ -276,7 +285,7 @@ part("J4", "Connector_Generic:Conn_01x04", "Motor",
      "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical")
 
 connect("VM", "U5.33", "U5.4", "C21.1", "C22.1", "C23.1",
-        "Q1.5", "Q3.5", "Q5.5", "Q7.5", "C33.1", "C34.1", "C35.1")
+        "Q1.6", "Q2.6", "Q3.6", "Q4.6", "C33.1", "C34.1", "C35.1")
 connect("TMC_VCP", "U5.34", "C23.2")
 connect("TMC_CPI", "U5.32", "C24.1")
 connect("TMC_CPO", "U5.31", "C24.2")
@@ -291,20 +300,20 @@ connect("GND", "U5.6", "U5.19", "U5.30", "U5.49", "U5.11", "U5.12",
         "C33.2", "C34.2", "C35.2", "R15.2", "R18.2", "R20.2", "R22.2", "R25.2")
 
 
-def half_bridge(n, hs, ls, out, gate_h, gate_l, boot, boot_pin, out_pin, sense):
-    """High side drain on VM, low side source on the phase sense node."""
-    connect(f"TMC_{gate_h[0]}", f"U5.{gate_h[1]}", f"{hs}.4")
-    connect(f"TMC_{gate_l[0]}", f"U5.{gate_l[1]}", f"{ls}.4")
-    connect(out, f"U5.{out_pin}", f"{hs}.1", f"{hs}.2", f"{hs}.3", f"{ls}.5",
-            f"{boot}.2", f"J4.{n}")
+def half_bridge(n, q, out, gate_h, gate_l, boot, boot_pin, out_pin, sense):
+    """Dual FET q: FET1 high side (drain on VM), FET2 low side (source on
+    the phase sense node), S1 and D2 form the bridge center."""
+    connect(f"TMC_{gate_h[0]}", f"U5.{gate_h[1]}", f"{q}.2")
+    connect(f"TMC_{gate_l[0]}", f"U5.{gate_l[1]}", f"{q}.4")
+    connect(out, f"U5.{out_pin}", f"{q}.1", f"{q}.5", f"{boot}.2", f"J4.{n}")
     connect(f"TMC_{boot_pin[0]}", f"U5.{boot_pin[1]}", f"{boot}.1")
-    connect(sense, f"{ls}.1", f"{ls}.2", f"{ls}.3")
+    connect(sense, f"{q}.3")
 
 
-half_bridge(1, "Q1", "Q2", "OUT1A", ("HA1", 41), ("LA1", 39), "C29", ("CA1", 42), 40, "TMC_SA")
-half_bridge(2, "Q3", "Q4", "OUT2A", ("HA2", 36), ("LA2", 38), "C30", ("CA2", 35), 37, "TMC_SA")
-half_bridge(3, "Q5", "Q6", "OUT1B", ("HB1", 1), ("LB1", 47), "C31", ("CB1", 2), 48, "TMC_SB")
-half_bridge(4, "Q7", "Q8", "OUT2B", ("HB2", 44), ("LB2", 46), "C32", ("CB2", 43), 45, "TMC_SB")
+half_bridge(1, "Q1", "OUT1A", ("HA1", 41), ("LA1", 39), "C29", ("CA1", 42), 40, "TMC_SA")
+half_bridge(2, "Q2", "OUT2A", ("HA2", 36), ("LA2", 38), "C30", ("CA2", 35), 37, "TMC_SA")
+half_bridge(3, "Q3", "OUT1B", ("HB1", 1), ("LB1", 47), "C31", ("CB1", 2), 48, "TMC_SB")
+half_bridge(4, "Q4", "OUT2B", ("HB2", 44), ("LB2", 46), "C32", ("CB2", 43), 45, "TMC_SB")
 
 # Sense resistors with 47R in each sense line (Figure 3.1). SRAL/SRBL go to
 # the GND end of their resistor; on the board that is a Kelvin trace.
@@ -347,8 +356,7 @@ groups.append({"name": "driver", "stages": [
     ["R24", "R25", "R16", "R17", "R26"],
     ["U5"],
     ["C29", "C30", "C31", "C32"],
-    ["Q1", "Q3", "Q5", "Q7"],
-    ["Q2", "Q4", "Q6", "Q8"],
+    ["Q1", "Q2", "Q3", "Q4"],
     ["R19", "R20", "R15", "R21", "R22", "R18"],
     ["C33", "C34", "C35", "J4"],
 ]})

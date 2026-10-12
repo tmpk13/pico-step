@@ -211,7 +211,37 @@ def l_abracon_aota_b201610() -> Footprint:
     )
 
 
-FOOTPRINTS = [pg_dso_8, l_abracon_aota_b201610]
+def vishay_powerpak_so8l_dual() -> Footprint:
+    # Vishay "Recommended Minimum Pad for PowerPAK SO-8L Dual" (document
+    # 63817, page 9 of the SQJB68EP data sheet). Package outline from
+    # document 66934: body 4.90 x 4.37 mm (D1 x E1), leads L1 = 1.07 mm, so
+    # the land pattern origin sits 0.18 mm below the body center; every y
+    # here is shifted by +0.18 to center the body.
+    #
+    # Top view, leads at the bottom: pins 1..4 left to right are S1, G1, S2,
+    # G2. Drain D1 is the left paddle (over pins 1-2), D2 the right one. The
+    # paddles are numbered 6 (D1) and 5 (D2) to match KiCad's
+    # Q_Dual_NMOS_S1G1S2G2D2D1 symbol. Each paddle is a 1.73 x 3.99 mm pad
+    # plus two side tabs, all with the same number.
+    dy = 0.18
+    pads = [Pad(str(i + 1), -1.905 + 1.27 * i, 2.715 + dy, 0.41, 0.72) for i in range(4)]
+    for num, s in (("6", -1), ("5", 1)):
+        pads += [
+            Pad(num, s * 1.115, -1.08 + dy, 1.73, 3.99, "rect"),
+            Pad(num, s * 2.215, -2.87 + dy, 0.47, 0.41, "rect"),
+            Pad(num, s * 2.2725, 0.0 + dy, 0.585, 0.51, "rect"),
+        ]
+    return Footprint(
+        name="Vishay_PowerPAK_SO-8L_Dual",
+        descr="Vishay PowerPAK SO-8L Dual, minimum pads per Vishay doc 63817 (SQJB68EP)",
+        tags="Vishay PowerPAK SO-8L dual MOSFET SQJB68EP",
+        body_w=4.90,
+        body_h=4.37,
+        pads=pads,
+    )
+
+
+FOOTPRINTS = [pg_dso_8, l_abracon_aota_b201610, vishay_powerpak_so8l_dual]
 
 STOCK_FP_DIR = Path("/usr/share/kicad/footprints")
 

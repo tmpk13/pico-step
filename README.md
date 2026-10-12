@@ -1,7 +1,7 @@
 # pico-step
 
 Closed-loop stepper driver board: RP2354A + TMC5160A motion controller and
-gate driver (eight external MOSFETs) + TLE5012B magnetic angle sensor.
+gate driver (four external dual MOSFETs) + TLE5012B magnetic angle sensor.
 USB-C powered logic, separate motor supply (VM) up to 48 V.
 
 The schematic is placed by hand in KiCad. `tools/circuit.py` is the reference

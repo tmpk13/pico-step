@@ -4400,7 +4400,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Transistor_FET:CSD19537Q3"
+		(symbol "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1"
 			(pin_names
 				(offset 0)
 				(hide yes)
@@ -4408,12 +4408,8 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "Q"
 				(at 5.08 1.905 0)
-				(show_name no)
-				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -4421,10 +4417,8 @@
 					(justify left)
 				)
 			)
-			(property "Value" "CSD19537Q3"
+			(property "Value" "Q_Dual_NMOS_S1G1S2G2D2D1"
 				(at 5.08 0 0)
-				(show_name no)
-				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -4432,65 +4426,43 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
-				(at 5.08 -1.905 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-					(justify left)
-				)
-			)
-			(property "Datasheet" "http://www.ti.com/lit/ds/symlink/csd19537q3.pdf"
-				(at 5.08 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
+			(property "Footprint" ""
+				(at 5.08 0 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left)
+					(hide yes)
 				)
 			)
-			(property "Description" "50A Id, 100V Vds, NexFET N-Channel Power MOSFET, 13mOhm Ron, Qg Typ 16.0nC, VSON8 3.3x3.3mm"
+			(property "Datasheet" "~"
+				(at 5.08 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Dual NMOS transistor, 6 pin package"
+				(at 2.286 -12.192 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "transistor NMOS N-MOS N-MOSFET"
 				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(hide yes)
 				)
 			)
-			(property "ki_keywords" "NexFET Power MOSFET N-MOS"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "VSON*3.3x3.3mm*P0.65mm*NexFET*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "CSD19537Q3_0_1"
+			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_0_1"
 				(polyline
 					(pts
 						(xy 0.254 1.905) (xy 0.254 -1.905)
@@ -4634,7 +4606,7 @@
 				)
 				(polyline
 					(pts
-						(xy 2.794 0.508) (xy 2.921 0.381) (xy 3.683 0.381) (xy 3.81 0.254)
+						(xy 2.921 0.381) (xy 3.683 0.381)
 					)
 					(stroke
 						(width 0)
@@ -4657,7 +4629,43 @@
 					)
 				)
 			)
-			(symbol "CSD19537Q3_1_1"
+			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_1_1"
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(name "D"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 				(pin passive line
 					(at 2.54 -5.08 90)
 					(length 2.54)
@@ -4676,47 +4684,11 @@
 						)
 					)
 				)
-				(pin passive line
-					(at 2.54 -5.08 90)
-					(length 2.54)
-					(hide yes)
-					(name "S"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 -5.08 90)
-					(length 2.54)
-					(hide yes)
-					(name "S"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
+			)
+			(symbol "Q_Dual_NMOS_S1G1S2G2D2D1_2_1"
 				(pin input line
 					(at -5.08 0 0)
-					(length 5.08)
+					(length 2.54)
 					(name "G"
 						(effects
 							(font
@@ -4743,6 +4715,24 @@
 						)
 					)
 					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -11292,9 +11282,9 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 629.92 139.7 0)
-		(unit 1)
+		(unit 2)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -11302,7 +11292,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "049ff9dd-d030-5cd7-b2d6-dd7d7ecb8fd5")
-		(property "Reference" "Q4"
+		(property "Reference" "Q2"
 			(at 630.8725 134.636 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11312,7 +11302,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 630.8725 144.764 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11322,7 +11312,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 629.92 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11355,7 +11345,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 629.92 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11366,7 +11356,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 629.92 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11376,15 +11366,9 @@
 					(size 1.27 1.27)
 				)
 			)
-		)
-		(pin "1"
-			(uuid "107a6d26-a3da-5146-98f2-e6c6bc8d825f")
-		)
-		(pin "2"
-			(uuid "62a7039c-e5ec-5fd5-b378-fad043c0d6c6")
 		)
 		(pin "3"
-			(uuid "446130f0-073f-52b8-8aa0-14c03f4f6672")
+			(uuid "107a6d26-a3da-5146-98f2-e6c6bc8d825f")
 		)
 		(pin "4"
 			(uuid "3a6d43a3-049f-5c35-ad43-f83baf0055e4")
@@ -11395,8 +11379,8 @@
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q4")
-					(unit 1)
+					(reference "Q2")
+					(unit 2)
 				)
 			)
 		)
@@ -12824,7 +12808,7 @@
 				)
 			)
 		)
-		(property "Value" "0.1"
+		(property "Value" "0.15"
 			(at 658.749 221.98 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12867,7 +12851,7 @@
 				)
 			)
 		)
-		(property "MPN" "CRA2512-FZ-R100ELF"
+		(property "MPN" "CSRN2512FTR150"
 			(at 662.94 220.98 0)
 			(hide yes)
 			(show_name no)
@@ -12878,7 +12862,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Bourns"
+		(property "Manufacturer" "Stackpole"
 			(at 662.94 220.98 0)
 			(hide yes)
 			(show_name no)
@@ -13061,7 +13045,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 599.44 96.52 0)
 		(unit 1)
 		(body_style 1)
@@ -13081,7 +13065,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 600.3925 101.584 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13091,7 +13075,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 599.44 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -13124,7 +13108,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 599.44 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -13135,7 +13119,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 599.44 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -13150,15 +13134,9 @@
 			(uuid "e06b7414-22b8-5c7f-bb03-9b23989ec850")
 		)
 		(pin "2"
-			(uuid "f9ab778c-3ac8-5811-a389-6e9d8f7e12cd")
-		)
-		(pin "3"
-			(uuid "b2cabbd1-75c9-5d61-a599-749a287d8e22")
-		)
-		(pin "4"
 			(uuid "1a20946b-2246-5e1e-8c3c-20792cac900d")
 		)
-		(pin "5"
+		(pin "6"
 			(uuid "4fd15cbd-0284-5e67-92a9-cefe2447e205")
 		)
 		(instances
@@ -14582,7 +14560,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 599.44 172.72 0)
 		(unit 1)
 		(body_style 1)
@@ -14592,7 +14570,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3938567d-0f1e-5f69-96b9-e88e2c5703ed")
-		(property "Reference" "Q5"
+		(property "Reference" "Q3"
 			(at 600.3925 167.656 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14602,7 +14580,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 600.3925 177.784 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14612,7 +14590,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 599.44 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -14645,7 +14623,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 599.44 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -14656,7 +14634,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 599.44 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -14671,21 +14649,15 @@
 			(uuid "cd2d635b-5133-5882-8473-e931a6f5b3f0")
 		)
 		(pin "2"
-			(uuid "f456a04b-2bc0-595a-8008-871d9fdad52e")
-		)
-		(pin "3"
-			(uuid "9bfe4586-1040-5fe2-b3b2-4f2edae48d2c")
-		)
-		(pin "4"
 			(uuid "934ee3ad-28eb-5b57-bc9a-662442ce4796")
 		)
-		(pin "5"
+		(pin "6"
 			(uuid "bdd65d1f-5030-5062-9c8d-ff5c55477a8d")
 		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q5")
+					(reference "Q3")
 					(unit 1)
 				)
 			)
@@ -14846,9 +14818,9 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 629.92 205.74 0)
-		(unit 1)
+		(unit 2)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14856,7 +14828,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3c652ded-b9a1-59da-980a-dcd3aac0df08")
-		(property "Reference" "Q8"
+		(property "Reference" "Q4"
 			(at 630.8725 200.676 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14866,7 +14838,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 630.8725 210.804 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14876,7 +14848,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 629.92 205.74 0)
 			(hide yes)
 			(show_name no)
@@ -14909,7 +14881,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 629.92 205.74 0)
 			(hide yes)
 			(show_name no)
@@ -14920,7 +14892,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 629.92 205.74 0)
 			(hide yes)
 			(show_name no)
@@ -14930,15 +14902,9 @@
 					(size 1.27 1.27)
 				)
 			)
-		)
-		(pin "1"
-			(uuid "c961e693-1f1f-5fbb-b125-fa4f50860198")
-		)
-		(pin "2"
-			(uuid "8f00f702-c7fd-5911-bc8c-ce0f22fd840b")
 		)
 		(pin "3"
-			(uuid "f3e7ee0f-d1b3-5a2b-ba05-f047aa1502e9")
+			(uuid "c961e693-1f1f-5fbb-b125-fa4f50860198")
 		)
 		(pin "4"
 			(uuid "420b6cc3-ecc2-5d88-b7a9-dec0230e7ea8")
@@ -14949,8 +14915,8 @@
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q8")
-					(unit 1)
+					(reference "Q4")
+					(unit 2)
 				)
 			)
 		)
@@ -16389,7 +16355,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 599.44 134.62 0)
 		(unit 1)
 		(body_style 1)
@@ -16399,7 +16365,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "53f7342e-2198-59e2-ba29-1aa9940e3261")
-		(property "Reference" "Q3"
+		(property "Reference" "Q2"
 			(at 600.3925 129.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16409,7 +16375,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 600.3925 139.684 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16419,7 +16385,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 599.44 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -16452,7 +16418,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 599.44 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -16463,7 +16429,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 599.44 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -16478,21 +16444,15 @@
 			(uuid "371e3a45-5cef-5365-8867-7085bfc7decb")
 		)
 		(pin "2"
-			(uuid "0b057878-75ed-5fbf-8569-03bcf9b505a9")
-		)
-		(pin "3"
-			(uuid "f569f470-9a72-5ec1-91ec-2e730f86c85c")
-		)
-		(pin "4"
 			(uuid "35a5a666-041e-5a48-87c7-55ddc6d24925")
 		)
-		(pin "5"
+		(pin "6"
 			(uuid "1f321159-249c-5c5d-86b3-52c94bacab30")
 		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q3")
+					(reference "Q2")
 					(unit 1)
 				)
 			)
@@ -20883,9 +20843,9 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 629.92 106.68 0)
-		(unit 1)
+		(unit 2)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -20893,7 +20853,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a512cd8e-a919-5801-8397-be076a3a70a7")
-		(property "Reference" "Q2"
+		(property "Reference" "Q1"
 			(at 630.8725 101.616 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20903,7 +20863,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 630.8725 111.744 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20913,7 +20873,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 629.92 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -20946,7 +20906,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 629.92 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -20957,7 +20917,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 629.92 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -20967,15 +20927,9 @@
 					(size 1.27 1.27)
 				)
 			)
-		)
-		(pin "1"
-			(uuid "6da3b99c-19d6-587e-82c6-9b8ef6f4cb73")
-		)
-		(pin "2"
-			(uuid "b0a7fdd1-216f-59a1-b847-d6a45019dec3")
 		)
 		(pin "3"
-			(uuid "188de459-6208-597a-87f8-e762e65c5e6c")
+			(uuid "6da3b99c-19d6-587e-82c6-9b8ef6f4cb73")
 		)
 		(pin "4"
 			(uuid "75987c84-c839-5554-9233-3cbebcf5ab7a")
@@ -20986,8 +20940,8 @@
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q2")
-					(unit 1)
+					(reference "Q1")
+					(unit 2)
 				)
 			)
 		)
@@ -21908,7 +21862,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 599.44 208.28 0)
 		(unit 1)
 		(body_style 1)
@@ -21918,7 +21872,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b1574ad1-8d85-5b89-be52-412b3b052d4f")
-		(property "Reference" "Q7"
+		(property "Reference" "Q4"
 			(at 600.3925 203.216 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21928,7 +21882,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 600.3925 213.344 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21938,7 +21892,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 599.44 208.28 0)
 			(hide yes)
 			(show_name no)
@@ -21971,7 +21925,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 599.44 208.28 0)
 			(hide yes)
 			(show_name no)
@@ -21982,7 +21936,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 599.44 208.28 0)
 			(hide yes)
 			(show_name no)
@@ -21997,21 +21951,15 @@
 			(uuid "a61554c0-b094-55c3-9912-84ebd2b96c91")
 		)
 		(pin "2"
-			(uuid "f15a1afb-bac7-5da2-ab6d-46ff1c6b3377")
-		)
-		(pin "3"
-			(uuid "4b7f090a-b096-5630-8091-c821c8e087ed")
-		)
-		(pin "4"
 			(uuid "e626126c-44f3-53d4-8194-16f88c4c0ddf")
 		)
-		(pin "5"
+		(pin "6"
 			(uuid "7c17c6fc-918c-5d0c-b784-da3e7a7a7dac")
 		)
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q7")
+					(reference "Q4")
 					(unit 1)
 				)
 			)
@@ -22196,7 +22144,7 @@
 				)
 			)
 		)
-		(property "Value" "0.1"
+		(property "Value" "0.15"
 			(at 658.749 148.32 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22239,7 +22187,7 @@
 				)
 			)
 		)
-		(property "MPN" "CRA2512-FZ-R100ELF"
+		(property "MPN" "CSRN2512FTR150"
 			(at 662.94 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -22250,7 +22198,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Bourns"
+		(property "Manufacturer" "Stackpole"
 			(at 662.94 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -24923,9 +24871,9 @@
 		)
 	)
 	(symbol
-		(lib_id "Transistor_FET:CSD19537Q3")
+		(lib_id "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1")
 		(at 629.92 172.72 0)
-		(unit 1)
+		(unit 2)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -24933,7 +24881,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e5badbfb-4eba-5838-9a63-eb9c4b6d0de5")
-		(property "Reference" "Q6"
+		(property "Reference" "Q3"
 			(at 630.8725 167.656 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24943,7 +24891,7 @@
 				)
 			)
 		)
-		(property "Value" "CSD19537Q3"
+		(property "Value" "SQJB68EP"
 			(at 630.8725 177.784 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24953,7 +24901,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SON:VSON-8_3.3x3.3mm_P0.65mm_NexFET"
+		(property "Footprint" "pico-step:Vishay_PowerPAK_SO-8L_Dual"
 			(at 629.92 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -24986,7 +24934,7 @@
 				)
 			)
 		)
-		(property "MPN" "CSD19537Q3"
+		(property "MPN" "SQJB68EP-T1_BE3"
 			(at 629.92 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -24997,7 +24945,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Texas Instruments"
+		(property "Manufacturer" "Vishay Siliconix"
 			(at 629.92 172.72 0)
 			(hide yes)
 			(show_name no)
@@ -25007,15 +24955,9 @@
 					(size 1.27 1.27)
 				)
 			)
-		)
-		(pin "1"
-			(uuid "d3a21801-5726-583f-b635-ae38634aa802")
-		)
-		(pin "2"
-			(uuid "cd68d0b2-a9a5-5851-bbec-36bbd754db9e")
 		)
 		(pin "3"
-			(uuid "a60f353e-86dd-571a-86cc-3bd284d41037")
+			(uuid "d3a21801-5726-583f-b635-ae38634aa802")
 		)
 		(pin "4"
 			(uuid "9997a16e-6ad1-582d-a8c6-f7c3d938630d")
@@ -25026,8 +24968,8 @@
 		(instances
 			(project "pico-step"
 				(path "/462fe213-14a4-574f-add7-16e2388436e5"
-					(reference "Q6")
-					(unit 1)
+					(reference "Q3")
+					(unit 2)
 				)
 			)
 		)

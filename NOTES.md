@@ -46,7 +46,7 @@ C21..C26 and R15..R17 kept their numbers but are different parts now.
 - VSA is tied to VS (standard circuit, Figure 3.1). Section 3.2 allows that
   at 48 V when MOSFET Qg < 50 nC, chopper <= 40 kHz and the clock is the
   internal 12 MHz. Estimated regulator dissipation at 48 V: 12 V regulator
-  36 V x (8 x 16 nC x 40 kHz) = 0.2 W (limit 0.5 W), 5 V regulator
+  36 V x (8 x 8 nC x 40 kHz) = 0.09 W (limit 0.5 W), 5 V regulator
   43 V x 10 mA = 0.45 W (limit 1 W). An external 12 V gate supply on
   VSA/12VOUT (Figure 3.2) is the fallback if the IC runs hot.
 - No overvoltage clamp on VM. A TVS that stands off 48 V clamps above the
@@ -54,16 +54,40 @@ C21..C26 and R15..R17 kept their numbers but are different parts now.
   while the motor spins) must go into the supply or a brake circuit.
 
 ## MOSFETs and sense resistors
-- CSD19537Q3: 100 V (48 V plus margin for ringing), 12.1 mOhm, Qg 16 nC,
-  Qgd 2.9 nC. Miller charge under 10 nC runs at DRVSTRENGTH=0 with no gate
-  resistor (section 3.3); bootstrap 220 nF for Qg < 20 nC (Figure 3.1).
-  Pinout checked against TI's top view: 1-3 S, 4 G, 5-8 and tab D, which is
-  the stock symbol and NexFET footprint numbering.
-- RSENSE 0.1 Ohm: 2.3 A RMS / 3.3 A peak at full scale (data sheet table,
-  chapter 9). Chosen to stay inside the JST XH motor header's 3 A rating;
-  firmware sets the actual current with GLOBALSCALER and IRUN. More current
-  needs a lower RSENSE and a bigger motor connector. Standstill peak
-  dissipation 1.1 W, so 3 W 2512 parts.
+- SQJB68EP-T1_BE3 (Vishay dual N, PowerPAK SO-8L Dual), one per half
+  bridge: 100 V, 92 mOhm max (162 mOhm at 125 C), Qg 4.7 nC typ / 8 nC
+  max, Qgd 1.3 nC, Vgs +-20 V, RthJA 85 C/W on 1 in^2. Chosen over the
+  CSD19537Q3 (12 mOhm, $1.39 at 40 pcs) for cost at 5-board quantities:
+  4 duals cost $14 against $56 for 8 singles (Mouser, 2026-10-12). The
+  CSD19538Q3A (59 mOhm single) was cheaper still but listed no stock.
+  Miller charge under 10 nC: DRVSTRENGTH=0, no gate resistor (section 3.3);
+  bootstrap 220 nF for Qg < 20 nC (Figure 3.1).
+- Pinout from the SQJB68EP data sheet page 1 and the case outline (doc
+  66934): top view with the leads at the bottom, pins 1..4 left to right
+  are S1 G1 S2 G2; drain paddle D1 is over pins 1-2, D2 over pins 3-4.
+  Footprint pads: D1 = 6, D2 = 5, matching KiCad's
+  Q_Dual_NMOS_S1G1S2G2D2D1 (unit 1 = pins 1 2 6, unit 2 = pins 3 4 5).
+  FET1 is the high side, FET2 the low side; S1 (pin 1) and D2 (right
+  paddle) must be joined on the board, which crosses the package.
+- Footprint pads from Vishay doc 63817 (minimum pads, PowerPAK SO-8L
+  Dual), y shifted +0.18 mm so the 4.90 x 4.37 mm body is centered. Each
+  drain paddle is three same-numbered pads (paddle plus two side tabs).
+  Paste covers the whole paddle; reduce it if the first boards float.
+- In the hand-placed schematic each old single FET became one unit at the
+  same position (identical G/D/S pin geometry), so no wires moved:
+  Q1 Q2 -> Q1 units 1 2, Q3 Q4 -> Q2, Q5 Q6 -> Q3, Q7 Q8 -> Q4.
+- RSENSE 0.15 Ohm (Stackpole CSRN2512FTR150, 2 W): 1.6 A RMS / 2.2 A peak
+  at full scale (data sheet table, chapter 9). The cap comes from the
+  FETs: at standstill one low side FET can carry the peak continuously,
+  2.2^2 x 0.15 Ohm (hot) = 0.7 W, about 60 C over ambient at 85 C/W. The
+  sense resistor sees the same 0.7 W. More current needs lower-resistance
+  FETs as well as a lower RSENSE.
+- Short detection must be desensitized for the higher on-resistance. At
+  2.2 A peak the low side check sees 0.36 V (hot FET) + 0.33 V (RSENSE) =
+  0.69 V, above the 0.55 V minimum of S2VS_LEVEL=6 (OTP default 6 or 12).
+  Use S2VS_LEVEL >= 9 (about 0.83 V minimum) and S2G_LEVEL >= 8 (high side
+  drop 0.36 V; level 6 minimum is 0.46 V). Levels interpolated linearly
+  between the data sheet's level 6 and level 15 limits.
 - 12VOUT uses a 1206 X7R 10 uF 25 V: at 12 V bias an 0805 10 uF keeps too
   little of its value for the ">= 10x one bootstrap capacitor" rule.
 

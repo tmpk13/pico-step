@@ -121,15 +121,16 @@ def test_tmc5160_pin_names_match_data_sheet():
 
 
 def test_tmc5160_bridges_wired_per_phase(circuit):
-    """Each half bridge: gate pins on the right FETs, high side drain on VM,
-    low side source on its phase's sense node, bridge center on the motor."""
+    """Each half bridge is one dual MOSFET: FET1 (S1=1, G1=2, D1=6) high
+    side with its drain on VM, FET2 (S2=3, G2=4, D2=5) low side with its
+    source on the phase's sense node, bridge center on the motor."""
     nets = {n["name"]: set(n["pins"]) for n in circuit["nets"]}
     bridges = [
-        # (high FET, low FET, H pin, L pin, BM pin, C pin, sense net, J4 pin)
-        ("Q1", "Q2", "41", "39", "40", "42", "TMC_SA", "1"),
-        ("Q3", "Q4", "36", "38", "37", "35", "TMC_SA", "2"),
-        ("Q5", "Q6", "1", "47", "48", "2", "TMC_SB", "3"),
-        ("Q7", "Q8", "44", "46", "45", "43", "TMC_SB", "4"),
+        # (dual FET, H pin, L pin, BM pin, C pin, sense net, J4 pin)
+        ("Q1", "41", "39", "40", "42", "TMC_SA", "1"),
+        ("Q2", "36", "38", "37", "35", "TMC_SA", "2"),
+        ("Q3", "1", "47", "48", "2", "TMC_SB", "3"),
+        ("Q4", "44", "46", "45", "43", "TMC_SB", "4"),
     ]
 
     def net_of(pin):
@@ -137,15 +138,54 @@ def test_tmc5160_bridges_wired_per_phase(circuit):
         assert len(hits) == 1, (pin, hits)
         return hits[0]
 
-    for hs, ls, h, low, bm, c, sense, j in bridges:
-        assert net_of(f"{hs}.4") == net_of(f"U5.{h}")
-        assert net_of(f"{ls}.4") == net_of(f"U5.{low}")
-        assert net_of(f"{hs}.5") == "VM"
+    for q, h, low, bm, c, sense, j in bridges:
+        assert net_of(f"{q}.2") == net_of(f"U5.{h}")
+        assert net_of(f"{q}.4") == net_of(f"U5.{low}")
+        assert net_of(f"{q}.6") == "VM"
         out = net_of(f"U5.{bm}")
-        assert {f"{hs}.1", f"{hs}.2", f"{hs}.3", f"{ls}.5", f"J4.{j}"} <= nets[out]
-        assert {f"{ls}.1", f"{ls}.2", f"{ls}.3"} <= nets[sense]
+        assert {f"{q}.1", f"{q}.5", f"J4.{j}"} <= nets[out]
+        assert f"{q}.3" in nets[sense]
         boot = [p for p in nets[net_of(f"U5.{c}")] if p != f"U5.{c}"]
         assert len(boot) == 1 and f"{boot[0].split('.')[0]}.2" in nets[out]
+
+
+def test_dual_fet_units_split_pins(circuit):
+    """Unit 1 of the stock dual symbol carries pins 1, 2, 6 and unit 2 carries
+    3, 4, 5; each Q must place both units."""
+    units = {}
+    for c in circuit["components"]:
+        if c["lib_id"] == "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1":
+            units.setdefault(c["ref"], set()).add(c.get("unit"))
+    assert units == {q: {1, 2} for q in ("Q1", "Q2", "Q3", "Q4")}
+
+
+def test_powerpak_so8l_dual_matches_datasheet():
+    """Vishay doc 63817 minimum pads, shifted so the 4.90 x 4.37 mm body is
+    centered (pad pattern origin sits 0.18 mm above the body center)."""
+    fp = footprints.vishay_powerpak_so8l_dual()
+    by_num: dict[str, list] = {}
+    for p in fp.pads:
+        by_num.setdefault(p.number, []).append(p)
+    assert sorted(by_num) == ["1", "2", "3", "4", "5", "6"]
+    leads = [by_num[n][0] for n in "1234"]
+    # Pins 1..4 left to right along the lead edge, 1.27 pitch, 0.41 x 0.72.
+    assert [p.x for p in leads] == pytest.approx([-1.905, -0.635, 0.635, 1.905])
+    assert all((p.w, p.h) == (0.41, 0.72) for p in leads)
+    assert all(p.y + p.h / 2 == pytest.approx(3.075 + 0.18) for p in leads)
+
+    def extent(ps):
+        return (min(p.x - p.w / 2 for p in ps), max(p.x + p.w / 2 for p in ps),
+                min(p.y - p.h / 2 for p in ps), max(p.y + p.h / 2 for p in ps))
+
+    # D1 (pad 6) sits over pins 1-2, D2 (pad 5) over pins 3-4.
+    d1, d2 = extent(by_num["6"]), extent(by_num["5"])
+    assert d1[1] == pytest.approx(-0.25) and d2[0] == pytest.approx(0.25)
+    assert d1[0] == pytest.approx(-2.565) and d2[1] == pytest.approx(2.565)
+    assert d1[2] == pytest.approx(-3.075 + 0.18)
+    # Overall land pattern 5.13 x 6.15.
+    allx = extent(fp.pads)
+    assert allx[1] - allx[0] == pytest.approx(5.13)
+    assert allx[3] - allx[2] == pytest.approx(6.15)
 
 
 def test_symbol_library_is_current():

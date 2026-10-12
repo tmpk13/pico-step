@@ -21,9 +21,9 @@ Every one of the 84 parts on the board, grouped by the chip it supports.
 
 | Function | Parts |
 | --- | --- |
-| Power bridges (A: Q1..Q4, B: Q5..Q8) | Q1..Q8 CSD19537Q3 |
+| Power bridges, one dual FET per half bridge (A: Q1 Q2, B: Q3 Q4) | Q1..Q4 SQJB68EP |
 | Bootstrap, CA1 CA2 CB1 CB2 | C29..C32 220n |
-| Sense resistors, phase A / B | R15 0.1, R18 0.1 |
+| Sense resistors, phase A / B | R15 0.15, R18 0.15 |
 | Sense line filters, SRAH SRAL SRBH SRBL | R19..R22 47 |
 | Bridge decoupling | C33 2.2u 100V, C34 2.2u 100V, C35 100u 63V |
 | VS / VSA decoupling | C21 100n 100V, C22 100n 100V |

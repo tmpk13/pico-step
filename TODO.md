@@ -4,7 +4,7 @@
       L1/R27/C36 new, C17 now the VREG_AVDD filter cap), the RP2040
       swap-back and the TMC5160A driver (ESP32-C5, RF section, FL1_rf, J5_rf, 48 MHz crystal
       and the TMC2240 leave; RP2040, W25Q128 U4, 12 MHz Y1, R14, U5
-      TMC5160A, Q1..Q8, C27..C35 and R18..R26 arrive). Refs C3..C28,
+      TMC5160A, Q1..Q4 SQJB68EP duals, C27..C35 and R18..R26 arrive). Refs C3..C28,
       R3..R8, R15..R17, L1..L4 changed meaning. `tests/test_refs.py` fails
       until the board matches.
 - [ ] PCB: RP2354A core regulator copied from RP2350 data sheet Figure 26:
@@ -18,8 +18,12 @@
       BM undershoot stays above -5 V (data sheet section 3.4).
 - [ ] Decide VM overvoltage handling for regenerative braking at 48 V (no
       clamp fitted; a TVS standing off 48 V clamps above the 60 V maximum).
-- [ ] Confirm the motor current target. RSENSE 0.1 gives 2.3 A RMS full
-      scale; more needs lower RSENSE and a connector rated above 3 A.
+- [ ] PCB: in each SQJB68EP join S1 (pin 1) to the D2 paddle with a wide,
+      short pour; D1 paddle to VM, S2 (pin 3) to the sense resistor.
+      Copper under both paddles for heat (85 C/W assumes 1 in^2).
+- [ ] Firmware: SHORT_CONF S2VS_LEVEL >= 9 and S2G_LEVEL >= 8 before
+      enabling the driver (NOTES.md, short detection), and IHOLD below
+      IRUN so standstill heat stays under the 0.7 W worst case.
 - [ ] Check stock for the resistors not searched (DIGIKEY.md).
 - [ ] Settle the hand edits that differ from `tools/circuit.py`
       (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and

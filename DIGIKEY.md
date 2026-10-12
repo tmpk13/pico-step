@@ -2,7 +2,7 @@
 
 Import `digikey_list.csv` into a DigiKey list (Quantity, Part Number = MPN).
 Matching by MPN lets DigiKey offer cut tape for prototype quantities.
-40 lines, 84 parts.
+40 lines, 80 parts.
 
 Notes:
 - SC1511-A4 is the RP2354A (A4 stepping) 500-piece reel; SC1511(13)-A4 is the 3400-piece reel.
@@ -10,7 +10,7 @@ Notes:
   orientation, and the RP2350 regulator is sensitive to it.
 - Stock was last checked for the ICs and connectors (BOM.md, 2026-10-02), for
   the passives shared with the ESP32-C5 variant (2026-10-04) and for the
-  TMC5160 stage (2026-10-11). RC0603FR-0727RL, RC0603FR-071KL,
+  TMC5160 stage (2026-10-11, bridge FETs and RSENSE again 2026-10-12). RC0603FR-0727RL, RC0603FR-071KL,
   RC0603FR-074K7L, RC0603FR-075K6L, RC0603FR-0747RL, RC0603FR-072R2L and
   CC0603JRNPO9BN150 were not searched.
 - Only reel packaging was returned by the search for most passives; cut tape

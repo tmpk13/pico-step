@@ -27,10 +27,10 @@ classDiagram
         ENCA/B/N from TLE5012B IFA/IFB/IFC
         VSA tied to VS, internal 12V and 5V regulators
     }
-    class Bridges_Q1_Q8 {
-        CSD19537Q3 x8, 100 V
-        Phase A Q1..Q4, phase B Q5..Q8
-        RSENSE 0.1R per phase, 2.3 A RMS full scale
+    class Bridges_Q1_Q4 {
+        SQJB68EP dual x4, 100 V, one per half bridge
+        Phase A Q1 Q2, phase B Q3 Q4
+        RSENSE 0.15R per phase, 1.6 A RMS full scale
     }
     class Motor_J4 {
         OUT1A OUT2A OUT1B OUT2B
@@ -53,9 +53,9 @@ classDiagram
     RP2354A_U1 --> TMC5160A_U5 : SPI0 + STEP/DIR + SD_MODE
     TLE5012B_U3 --> RP2354A_U1 : angle (SSC)
     MotorSupply_J2 --> TMC5160A_U5 : VM (VS, VSA)
-    MotorSupply_J2 --> Bridges_Q1_Q8 : VM
+    MotorSupply_J2 --> Bridges_Q1_Q4 : VM
     TLE5012B_U3 --> TMC5160A_U5 : IIF encoder
-    TMC5160A_U5 --> Bridges_Q1_Q8 : gate drive, sense
-    Bridges_Q1_Q8 --> Motor_J4 : coils
+    TMC5160A_U5 --> Bridges_Q1_Q4 : gate drive, sense
+    Bridges_Q1_Q4 --> Motor_J4 : coils
     MotorSupply_J2 --> RP2354A_U1 : VM_SENSE
 ```
