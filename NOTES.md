@@ -59,10 +59,25 @@ The board went RP2040 -> ESP32-C5HF4 -> RP2040. The ESP32-C5 version
 (dual-band Wi-Fi, RF diplexer, TLE5012B on a shared 3-wire SPI bus, strap
 rules) is commit eee3e1e plus 1840e9d; 738db68 holds its schematic and PCB
 placement. Swapping back restored the generator, symbols, footprints and
-tests from b46301c and regenerated the schematic. The PCB was left alone:
-its footprints come from the ESP32 netlist and the shared references
-(C3.., R3.., Y1) mean different parts now, so it needs Update PCB from
-Schematic in KiCad, then a placement check of every reused reference.
+tests from b46301c. The PCB still carries the ESP32 footprints and needs
+Update PCB from Schematic; the shared references (C3.., R3.., Y1) mean
+different parts now, so check the placement of every reused reference.
+
+## Hand-placed schematic
+The schematic was arranged in the KiCad GUI after generation, including
+connectivity edits (VM split from J2, DIAG0/DIAG1 not wired to the MCU,
+R16/R17 swapped). Regenerating it from circuit.py erased all of that once,
+so `mise run sch` now writes `build/pico-step.gen.kicad_sch` only.
+The RP2040 swap-back was done in place: ESP32-only parts were removed by
+wire cluster (pin positions computed from lib_symbols, every wire end checked
+to land on a pin, wire or label), wires from U5/J1/VM_SENSE to the old MCU
+were cut back to global-label stubs, and the RP2040 block was laid out alone
+with kicad-vis and pasted below the existing parts. Paste details: rewrite
+symbol instances to this project's root sheet path, renumber #PWR, drop the
+block's PWR_FLAGs (they clash with the AP2112K output), and keep one power
+symbol per stacked supply pin (IOVDD x6, DVDD x2). TLE5012B labels at R9/R11
+were renamed SPI_SCK -> ENC_SCK and SPI_MOSI -> ENC_DATA for the RP2040
+SPI1 wiring.
 
 ## DigiKey list
 - eparts-search returns the reel (TR) variant of most passives; use the MPN in

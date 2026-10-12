@@ -12,3 +12,7 @@
       on the ESP32-C5 netlist; refs C3..C28, R3..R8, L1..L4 changed meaning.
       `tests/test_refs.py` fails until the board matches.
 - [ ] Check stock for the four passives new to the RP2040 list (DIGIKEY.md).
+- [ ] Settle the hand edits that differ from `tools/circuit.py`
+      (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and
+      TMC2240 DIAG0/DIAG1 not wired to RP2040 GPIO12/GPIO28 ("Selectable?"
+      note; their global labels at U1 are unconnected). Then update one or the other.

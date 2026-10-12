@@ -3,11 +3,13 @@
 Closed-loop stepper driver board: RP2040 + TMC2240 driver + TLE5012B
 magnetic angle sensor, USB-C powered logic, separate motor supply (VM).
 
-The schematic is generated; edit `tools/circuit.py`, not the `.kicad_sch`.
+The schematic is placed by hand in KiCad. `tools/circuit.py` is the reference
+netlist; `mise run parity` lists where the two differ.
 
 ```sh
 mise run install   # test deps
-mise run sch       # footprints + schematic + ERC severities
+mise run sch       # footprints + build/pico-step.gen.kicad_sch + ERC severities
+mise run parity    # schematic nets vs tools/circuit.py
 mise run erc
 mise run test
 mise run render    # build/pico-step.png

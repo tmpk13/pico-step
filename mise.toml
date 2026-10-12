@@ -18,18 +18,22 @@ description = "Generate project symbols into lib/pico-step.kicad_sym"
 run = "python tools/symbols.py"
 
 [tasks.sch]
-description = "Regenerate pico-step.kicad_sch from tools/circuit.py"
+description = "Generate build/pico-step.gen.kicad_sch from tools/circuit.py (the project schematic is hand-placed)"
 depends = ["footprints", "symbols"]
 # kicad-vis searches KICAD9_SYMBOL_DIR after its own KiCad 10 library.
 env = { KICAD9_SYMBOL_DIR = "{{config_root}}/lib" }
 run = [
     "mkdir -p build",
     "python tools/circuit.py > build/circuit.json",
-    "kicad-vis layout build/circuit.json -o pico-step.kicad_sch --json > build/layout.json",
+    "kicad-vis layout build/circuit.json -o build/pico-step.gen.kicad_sch --json > build/layout.json",
     "python -c \"import json,sys;d=json.load(open('build/layout.json'));print('ok',d['ok'],d.get('stats'));sys.exit(0 if d['ok'] else 1)\"",
-    "python ~/.claude/skills/kicad-schematic/fixjustify.py pico-step.kicad_sch",
+    "python ~/.claude/skills/kicad-schematic/fixjustify.py build/pico-step.gen.kicad_sch",
     "python tools/set_erc.py",
 ]
+
+[tasks.parity]
+description = "List nets that differ between pico-step.kicad_sch and tools/circuit.py"
+run = "python tools/parity.py"
 
 [tasks.render]
 description = "Render the schematic to build/pico-step.png"
