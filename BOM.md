@@ -1,4 +1,4 @@
-# BOM (sourced via DigiKey, 2026-10-02; driver stage and RP2354A 2026-10-11; bridge FETs and RSENSE 2026-10-12, DigiKey and Mouser)
+# BOM (sourced via DigiKey, 2026-10-02; RP2354A 2026-10-11; TMC5241 2026-10-22, DigiKey and Mouser)
 
 | Ref | MPN | Manufacturer | Footprint | Stock | Unit price |
 | --- | --- | --- | --- | --- | --- |
@@ -9,12 +9,10 @@
 | U3 | TLE5012BE5000XUMA1 | Infineon | pico-step:Infineon_PG-DSO-8 | 17056 | $2.40 @2500 reel |
 | Y1 | ABM8-272-T3 (12 MHz, CL 10 pF) | Abracon | Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm | 28279 | $0.42 @3000 reel |
 | J1 | USB4105-GF-A | GCT | pico-step:USB_C_Receptacle_GCT_USB4105-xx-A_16P_SH | 116353 | $0.50 @800 reel |
-| U5 | TMC5160A-TA (TQFP-48-EP 7x7, EP 5x5) | Analog Devices | Package_QFP:TQFP-48-1EP_7x7mm_P0.5mm_EP5x5mm_ThermalVias | 665 | $10.57 @1 |
-| Q1..Q4 | SQJB68EP-T1_BE3 (dual N, 100 V, 92 mOhm, Qg 8 nC max) | Vishay Siliconix | pico-step:Vishay_PowerPAK_SO-8L_Dual | 7806 Mouser, 1009 DigiKey | $0.706 @10 Mouser |
-| R15, R18 | CSRN2512FTR150 (0.15R 2W) | Stackpole | Resistor_SMD:R_2512_6332Metric | 3000 | $0.319 @10 cut tape |
+| U5 | TMC5241ATU+T (TQFN-38-EP 5x7, cut tape) | Analog Devices | pico-step:ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias | 2329 DigiKey; TMC5241ATU+ tray 354 DigiKey, 330 Mouser | $12.79 @1, $10.05 @10 |
 | C19, C35 | 63SGV100M10X10.5 (100u 63V) | Rubycon | Capacitor_SMD:CP_Elec_10x10.5 | 8760 | $0.41 @500 reel |
 | J4 | JST B4B-XH-A (motor) | JST | Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical | not searched | |
 
 Notes:
-- Only DigiKey is configured in eparts-search; LCSC and Mouser were not queried.
+- Before 2026-10-12 only DigiKey was queried; later searches cover DigiKey and Mouser.
 - Several MPNs above are reel-only at DigiKey; cut tape variants exist for prototypes.

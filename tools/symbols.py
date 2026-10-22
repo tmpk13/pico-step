@@ -126,95 +126,89 @@ def render(s: Symbol) -> str:
     return "".join(out)
 
 
-def tmc5160() -> Symbol:
-    # TMC5160/TMC5160A data sheet Rev 1.18, section 2.2 Signal Descriptions
-    # (TQFP column) and Figure 2.1 (TQFP-48 pinning). The exposed die pad is
-    # GNDD/GNDP and the low side gate driver ground; it is pin 49 here to
-    # match the stock TQFP-48-1EP footprint.
+def tmc5241() -> Symbol:
+    # TMC5241 data sheet Rev. 0, Pin Descriptions and the TQFN pin
+    # configuration (top view: pins 1..12 along one 7 mm side, then counter
+    # clockwise). Slashes in the data sheet names are underscores here. The
+    # N.C. pins are passive so they stay in the netlist; the data sheet
+    # allows tying them to GND for cooling. The exposed pad is GND and pin
+    # 39 to match the footprint.
     P = Pin
     return Symbol(
-        name="TMC5160A-TA",
+        name="TMC5241",
         reference="U",
-        footprint="Package_QFP:TQFP-48-1EP_7x7mm_P0.5mm_EP5x5mm_ThermalVias",
-        datasheet="https://www.analog.com/media/en/technical-documentation/data-sheets/TMC5160A_datasheet_rev1.18.pdf",
-        description="60V stepper motion controller and gate driver for external N-MOSFET bridges, SPI/UART + STEP/DIR, TQFP-48-EP 7x7mm",
-        keywords="stepper driver controller gate driver Trinamic ADI SPI StealthChop",
-        mpn="TMC5160A-TA",
+        footprint="pico-step:ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias",
+        datasheet="https://www.analog.com/media/en/technical-documentation/data-sheets/tmc5241.pdf",
+        description="65V 2A RMS stepper driver with motion controller, integrated MOSFETs and current sensing, SPI/UART, TQFN-38-EP 5x7mm",
+        keywords="stepper driver controller Trinamic ADI SPI StealthChop integrated",
+        mpn="TMC5241ATU+T",
         manufacturer="Analog Devices",
         # Blank rows keep the side pin names clear of the vertical top and
         # bottom pin names.
         left=[
             None, None, None,
-            P("13", "CSN_CFG3", "input"),
-            P("14", "SCK_CFG2", "input"),
-            P("15", "SDI_CFG1", "input"),
-            P("16", "SDO_CFG0", "bidirectional"),
+            P("34", "CSN_AD2", "input"),
+            P("35", "SCK_AD1", "input"),
+            P("36", "SDI_AD0", "input"),
+            P("37", "SDO_NAO", "tri_state"),
             None,
-            P("17", "REFL_STEP", "input"),
-            P("18", "REFR_DIR", "input"),
-            P("28", "DRV_ENN", "input"),
+            P("1", "REFL", "input"),
+            P("2", "REFR", "input"),
+            P("11", "DRV_ENN", "input"),
+            P("33", "nSLEEP", "input"),
             None,
-            P("21", "SD_MODE", "input"),
-            P("22", "SPI_MODE", "input"),
+            P("13", "DIAG0", "output"),
+            P("14", "DIAG1_SW", "bidirectional"),
+            P("15", "OV", "open_collector"),
             None,
-            P("26", "DIAG0_SWN", "bidirectional"),
-            P("27", "DIAG1_SWP", "bidirectional"),
+            P("10", "ENCA", "input"),
+            P("9", "ENCB", "input"),
+            P("8", "ENCN", "input"),
             None,
-            P("24", "ENCA_DCIN_CFG5", "input"),
-            P("23", "ENCB_DCEN_CFG4", "input"),
-            P("25", "ENCN_DCO_CFG6", "bidirectional"),
-            None,
-            P("12", "CLK", "input"),
-            P("11", "TST_MODE", "input"),
+            P("12", "UART_EN", "input"),
+            P("38", "CLK", "input"),
             None, None,
         ],
         right=[
             None, None, None,
-            P("42", "CA1", "passive"),
-            P("41", "HA1", "output"),
-            P("40", "BMA1", "passive"),
-            P("39", "LA1", "output"),
-            P("35", "CA2", "passive"),
-            P("36", "HA2", "output"),
-            P("37", "BMA2", "passive"),
-            P("38", "LA2", "output"),
-            P("8", "SRAH", "input"),
-            P("7", "SRAL", "input"),
+            P("29", "OUT1A", "output"),
+            P("27", "OUT2A", "output"),
             None,
-            P("2", "CB1", "passive"),
-            P("1", "HB1", "output"),
-            P("48", "BMB1", "passive"),
-            P("47", "LB1", "output"),
-            P("43", "CB2", "passive"),
-            P("44", "HB2", "output"),
-            P("45", "BMB2", "passive"),
-            P("46", "LB2", "output"),
-            P("9", "SRBH", "input"),
-            P("10", "SRBL", "input"),
+            P("22", "OUT1B", "output"),
+            P("24", "OUT2B", "output"),
+            None,
+            P("18", "VCP", "passive"),
+            P("16", "CPI", "passive"),
+            P("17", "CPO", "passive"),
+            None,
+            P("3", "IREF", "passive"),
+            P("4", "AIN", "input"),
             None, None,
         ],
         top=[
-            P("33", "VS", "power_in"),
-            P("4", "VSA", "power_in"),
-            P("34", "VCP", "passive"),
-            P("32", "CPI", "passive"),
-            P("31", "CPO", "passive"),
-            P("3", "12VOUT", "power_out"),
-            P("5", "5VOUT", "power_out"),
-            P("29", "VCC", "power_in"),
-            P("20", "VCC_IO", "power_in"),
+            P("30", "VS", "power_in"),
+            P("26", "VS", "power_in"),
+            P("25", "VS", "power_in"),
+            P("21", "VS", "power_in"),
+            None,
+            P("5", "VDD1V8", "power_out"),
+            P("7", "VCC_IO", "power_in"),
         ],
         bottom=[
-            P("6", "GNDA", "power_in"),
-            P("19", "GNDD", "power_in"),
+            P("6", "AGND", "power_in"),
+            P("23", "PGND", "power_in"),
+            P("28", "PGND", "power_in"),
+            P("39", "EP", "power_in"),
             None,
-            P("30", "GNDD", "power_in"),
-            P("49", "EP", "power_in"),
+            P("19", "NC", "passive"),
+            P("20", "NC", "passive"),
+            P("31", "NC", "passive"),
+            P("32", "NC", "passive"),
         ],
     )
 
 
-SYMBOLS = [tmc5160]
+SYMBOLS = [tmc5241]
 
 
 def main() -> None:

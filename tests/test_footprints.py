@@ -92,100 +92,91 @@ def test_generated_library_is_current():
         assert path.read_text() == fp.render(), f"rerun tools/footprints.py for {fp.name}"
 
 
-def test_tmc5160_symbol_has_every_pin_once():
+def test_tmc5241_symbol_has_every_pin_once():
     import symbols
 
-    nums = [p.number for p in symbols.tmc5160().pins()]
-    assert sorted(nums, key=int) == [str(n) for n in range(1, 50)]
+    nums = [p.number for p in symbols.tmc5241().pins()]
+    assert sorted(nums, key=int) == [str(n) for n in range(1, 40)]
 
 
-def test_tmc5160_pin_names_match_data_sheet():
+def test_tmc5241_pin_names_match_data_sheet():
     import symbols
 
-    # TMC5160A data sheet Rev 1.18, Signal Descriptions, TQFP column.
-    # 49 is the exposed die pad.
+    # TMC5241 data sheet Rev. 0, Pin Descriptions and TQFN pin
+    # configuration, "/" written as "_". 39 is the exposed pad (GND).
     expected = {
-        1: "HB1", 2: "CB1", 3: "12VOUT", 4: "VSA", 5: "5VOUT", 6: "GNDA",
-        7: "SRAL", 8: "SRAH", 9: "SRBH", 10: "SRBL", 11: "TST_MODE",
-        12: "CLK", 13: "CSN_CFG3", 14: "SCK_CFG2", 15: "SDI_CFG1",
-        16: "SDO_CFG0", 17: "REFL_STEP", 18: "REFR_DIR", 19: "GNDD",
-        20: "VCC_IO", 21: "SD_MODE", 22: "SPI_MODE", 23: "ENCB_DCEN_CFG4",
-        24: "ENCA_DCIN_CFG5", 25: "ENCN_DCO_CFG6", 26: "DIAG0_SWN",
-        27: "DIAG1_SWP", 28: "DRV_ENN", 29: "VCC", 30: "GNDD", 31: "CPO",
-        32: "CPI", 33: "VS", 34: "VCP", 35: "CA2", 36: "HA2", 37: "BMA2",
-        38: "LA2", 39: "LA1", 40: "BMA1", 41: "HA1", 42: "CA1", 43: "CB2",
-        44: "HB2", 45: "BMB2", 46: "LB2", 47: "LB1", 48: "BMB1", 49: "EP",
+        1: "REFL", 2: "REFR", 3: "IREF", 4: "AIN", 5: "VDD1V8", 6: "AGND",
+        7: "VCC_IO", 8: "ENCN", 9: "ENCB", 10: "ENCA", 11: "DRV_ENN",
+        12: "UART_EN", 13: "DIAG0", 14: "DIAG1_SW", 15: "OV", 16: "CPI",
+        17: "CPO", 18: "VCP", 19: "NC", 20: "NC", 21: "VS", 22: "OUT1B",
+        23: "PGND", 24: "OUT2B", 25: "VS", 26: "VS", 27: "OUT2A",
+        28: "PGND", 29: "OUT1A", 30: "VS", 31: "NC", 32: "NC",
+        33: "nSLEEP", 34: "CSN_AD2", 35: "SCK_AD1", 36: "SDI_AD0",
+        37: "SDO_NAO", 38: "CLK", 39: "EP",
     }
-    got = {int(p.number): p.name for p in symbols.tmc5160().pins()}
+    got = {int(p.number): p.name for p in symbols.tmc5241().pins()}
     assert got == expected
 
 
-def test_tmc5160_bridges_wired_per_phase(circuit):
-    """Each half bridge is one dual MOSFET: FET1 (S1=1, G1=2, D1=6) high
-    side with its drain on VM, FET2 (S2=3, G2=4, D2=5) low side with its
-    source on the phase's sense node, bridge center on the motor."""
+def test_tmc5241_support_circuit(circuit):
+    """Supply, strap and output pins per the data sheet's Figure 50 and pin
+    table: VS on the motor supply, VCC_IO on 3V3, VDD1V8 and IREF each to one
+    part going to GND, SPI and internal clock straps low, OV unused."""
     nets = {n["name"]: set(n["pins"]) for n in circuit["nets"]}
-    bridges = [
-        # (dual FET, H pin, L pin, BM pin, C pin, sense net, J4 pin)
-        ("Q1", "41", "39", "40", "42", "TMC_SA", "1"),
-        ("Q2", "36", "38", "37", "35", "TMC_SA", "2"),
-        ("Q3", "1", "47", "48", "2", "TMC_SB", "3"),
-        ("Q4", "44", "46", "45", "43", "TMC_SB", "4"),
-    ]
 
     def net_of(pin):
         hits = [name for name, pins in nets.items() if pin in pins]
         assert len(hits) == 1, (pin, hits)
         return hits[0]
 
-    for q, h, low, bm, c, sense, j in bridges:
-        assert net_of(f"{q}.2") == net_of(f"U5.{h}")
-        assert net_of(f"{q}.4") == net_of(f"U5.{low}")
-        assert net_of(f"{q}.6") == "VM"
-        out = net_of(f"U5.{bm}")
-        assert {f"{q}.1", f"{q}.5", f"J4.{j}"} <= nets[out]
-        assert f"{q}.3" in nets[sense]
-        boot = [p for p in nets[net_of(f"U5.{c}")] if p != f"U5.{c}"]
-        assert len(boot) == 1 and f"{boot[0].split('.')[0]}.2" in nets[out]
+    assert {net_of(f"U5.{p}") for p in (21, 25, 26, 30)} == {"VM"}
+    assert net_of("U5.7") == "+3V3"
+    # AGND, PGND, EP, UART_EN, CLK, AIN and the four N.C. pins.
+    for p in (6, 23, 28, 39, 12, 38, 4, 19, 20, 31, 32):
+        assert net_of(f"U5.{p}") == "GND", p
+    assert "U5.15" in circuit["no_connect"]
+    for pin in ("U5.5", "U5.3"):
+        others = nets[net_of(pin)] - {pin}
+        assert len(others) == 1
+        ref, n = others.pop().split(".")
+        assert net_of(f"{ref}.{3 - int(n)}") == "GND"
+    # Charge pump: VCP to VS through one capacitor, CPI to CPO through one.
+    vcp = nets[net_of("U5.18")] - {"U5.18"}
+    assert len(vcp) == 1 and net_of(vcp.pop().replace(".2", ".1")) == "VM"
+    cpi, cpo = nets[net_of("U5.16")] - {"U5.16"}, nets[net_of("U5.17")] - {"U5.17"}
+    assert len(cpi) == len(cpo) == 1 and cpi.pop()[:-2] == cpo.pop()[:-2]
+    # Motor connector order 1A 2A 1B 2B.
+    for p, j in ((29, 1), (27, 2), (22, 3), (24, 4)):
+        assert f"J4.{j}" in nets[net_of(f"U5.{p}")]
 
 
-def test_dual_fet_units_split_pins(circuit):
-    """Unit 1 of the stock dual symbol carries pins 1, 2, 6 and unit 2 carries
-    3, 4, 5; each Q must place both units."""
-    units = {}
-    for c in circuit["components"]:
-        if c["lib_id"] == "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1":
-            units.setdefault(c["ref"], set()).add(c.get("unit"))
-    assert units == {q: {1, 2} for q in ("Q1", "Q2", "Q3", "Q4")}
-
-
-def test_powerpak_so8l_dual_matches_datasheet():
-    """Vishay doc 63817 minimum pads, shifted so the 4.90 x 4.37 mm body is
-    centered (pad pattern origin sits 0.18 mm above the body center)."""
-    fp = footprints.vishay_powerpak_so8l_dual()
-    by_num: dict[str, list] = {}
-    for p in fp.pads:
-        by_num.setdefault(p.number, []).append(p)
-    assert sorted(by_num) == ["1", "2", "3", "4", "5", "6"]
-    leads = [by_num[n][0] for n in "1234"]
-    # Pins 1..4 left to right along the lead edge, 1.27 pitch, 0.41 x 0.72.
-    assert [p.x for p in leads] == pytest.approx([-1.905, -0.635, 0.635, 1.905])
-    assert all((p.w, p.h) == (0.41, 0.72) for p in leads)
-    assert all(p.y + p.h / 2 == pytest.approx(3.075 + 0.18) for p in leads)
-
-    def extent(ps):
-        return (min(p.x - p.w / 2 for p in ps), max(p.x + p.w / 2 for p in ps),
-                min(p.y - p.h / 2 for p in ps), max(p.y + p.h / 2 for p in ps))
-
-    # D1 (pad 6) sits over pins 1-2, D2 (pad 5) over pins 3-4.
-    d1, d2 = extent(by_num["6"]), extent(by_num["5"])
-    assert d1[1] == pytest.approx(-0.25) and d2[0] == pytest.approx(0.25)
-    assert d1[0] == pytest.approx(-2.565) and d2[1] == pytest.approx(2.565)
-    assert d1[2] == pytest.approx(-3.075 + 0.18)
-    # Overall land pattern 5.13 x 6.15.
-    allx = extent(fp.pads)
-    assert allx[1] - allx[0] == pytest.approx(5.13)
-    assert allx[3] - allx[2] == pytest.approx(6.15)
+def test_tqfn38_matches_land_pattern():
+    """ADI/Maxim land pattern 90-0076 rev C, turned with the 12-pad rows
+    vertical and pin 1 at the top of the left row."""
+    fp = footprints.adi_tqfn38_5x7()
+    sig = {p.number: p for p in fp.pads if p.number and p.number != "39"}
+    assert sorted(sig, key=int) == [str(n) for n in range(1, 39)]
+    left = [sig[str(n)] for n in range(1, 13)]
+    bottom = [sig[str(n)] for n in range(13, 20)]
+    right = [sig[str(n)] for n in range(20, 32)]
+    top = [sig[str(n)] for n in range(32, 39)]
+    assert all((p.w, p.h) == (0.75, 0.25) for p in left + right)
+    assert all((p.w, p.h) == (0.25, 0.75) for p in top + bottom)
+    # 4.88 between the 12-pad row centers, 6.85 between the 7-pad rows.
+    assert right[0].x - left[0].x == pytest.approx(4.88)
+    assert bottom[0].y - top[0].y == pytest.approx(6.85)
+    # 0.5 mm pitch, counter clockwise from the top left.
+    assert [p.y for p in left] == pytest.approx([-2.75 + 0.5 * i for i in range(12)])
+    assert [p.x for p in bottom] == pytest.approx([-1.5 + 0.5 * i for i in range(7)])
+    assert [p.y for p in right] == pytest.approx([2.75 - 0.5 * i for i in range(12)])
+    assert [p.x for p in top] == pytest.approx([1.5 - 0.5 * i for i in range(7)])
+    assert left[0].y < 0 and left[0].x < 0
+    ep = [p for p in fp.pads if p.number == "39" and not p.drill]
+    assert {(p.w, p.h) for p in ep} == {(3.65, 5.60)}
+    assert {lay for p in ep for lay in p.layers} == {"F.Cu", "F.Mask", "B.Cu"}
+    vias = [p for p in fp.pads if p.drill]
+    assert all(p.drill == 0.3 and abs(p.x) + 0.3 < 3.65 / 2 and abs(p.y) + 0.3 < 5.60 / 2
+               for p in vias)
 
 
 def test_symbol_library_is_current():

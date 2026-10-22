@@ -4,6 +4,9 @@ uv = "latest"
 
 [env]
 _.python.venv = { path = ".venv", create = true }
+# KiCad's pcbnew module is installed for the system Python only; the PCB
+# tasks run under it rather than the project venv.
+KICAD_PYTHON = "/usr/bin/python3"
 
 [tasks.install]
 description = "Install test dependencies into the project venv"
@@ -49,19 +52,19 @@ run = "pytest -q --tb=short tests"
 
 [tasks.pcb-place]
 description = "Apply the placement table in tools/pcb_place.py to pico-step.kicad_pcb (overwrites GUI moves)"
-run = "python3 tools/pcb_place.py"
+run = "$KICAD_PYTHON tools/pcb_place.py"
 
-[tasks.pcb-route]
-description = "Pre-route the power stage and VM pour (removes all tracks first, run only before autorouting)"
-run = "python3 tools/pcb_route.py"
+[tasks.pcb-sync]
+description = "Update the board from the schematic (footprints, values, fields, nets), keeping the placement"
+run = "$KICAD_PYTHON tools/pcb_sync.py"
 
 [tasks.pcb-fill]
 description = "Refill the copper zones of pico-step.kicad_pcb"
-run = "python3 tools/pcb_fill.py"
+run = "$KICAD_PYTHON tools/pcb_fill.py"
 
 [tasks.pcb-dsn]
 description = "Export build/pico-step.dsn for freerouting"
-run = "python3 tools/pcb_dsn.py"
+run = "$KICAD_PYTHON tools/pcb_dsn.py"
 
 [tasks.pcb-autoroute]
 description = "Route build/pico-step.dsn with freerouting into build/pico-step.ses (FREEROUTING points at the launcher or jar)"
@@ -75,19 +78,19 @@ run = [
 
 [tasks.pcb-ses]
 description = "Import build/pico-step.ses into the board and refill the zones"
-run = ["python3 tools/pcb_ses.py build/pico-step.ses", "python3 tools/pcb_fill.py"]
+run = ["$KICAD_PYTHON tools/pcb_ses.py build/pico-step.ses", "$KICAD_PYTHON tools/pcb_fill.py"]
 
 [tasks.pcb-gnd]
 description = "GND stitching: via grid, vias at pads the pour misses, prune dangling ones (needs build/drc.json from pcb-drc-json)"
 run = [
-    "python3 tools/pcb_gnd_vias.py grid",
-    "python3 tools/pcb_fill.py",
+    "$KICAD_PYTHON tools/pcb_gnd_vias.py grid",
+    "$KICAD_PYTHON tools/pcb_fill.py",
     "kicad-cli pcb drc -o build/drc.json --format json --severity-all pico-step.kicad_pcb",
-    "python3 tools/pcb_gnd_vias.py pads build/drc.json",
-    "python3 tools/pcb_fill.py",
+    "$KICAD_PYTHON tools/pcb_gnd_vias.py pads build/drc.json",
+    "$KICAD_PYTHON tools/pcb_fill.py",
     "kicad-cli pcb drc -o build/drc.json --format json --severity-all pico-step.kicad_pcb",
-    "python3 tools/pcb_gnd_vias.py prune build/drc.json",
-    "python3 tools/pcb_fill.py",
+    "$KICAD_PYTHON tools/pcb_gnd_vias.py prune build/drc.json",
+    "$KICAD_PYTHON tools/pcb_fill.py",
 ]
 
 [tasks.pcb-drc-json]

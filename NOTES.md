@@ -29,84 +29,97 @@ every circuit pin exists as a pad on the named footprint and vice versa.
 ## Power
 Logic is USB powered (VBUS -> AP2112K-3.3). Motor supply VM enters on J2,
 is not tied to VBUS, and runs up to 48 V. VM_SENSE (100k/5.6k) puts 48 V at
-2.55 V and reaches the 3.3 V ADC limit only at 62 V, past the driver's
-60 V absolute maximum. Every part on VM is rated 63 V or more.
+2.55 V and reaches the 3.3 V ADC limit at 62 V, about the 63 V rating of
+the bulk capacitors (the TMC5241 itself runs to 65 V). Every part on VM is
+rated 63 V or more.
 
-## TMC5160A data sheet
-`ref/tmc5240.pdf` is the TMC5240 (36 V, integrated FETs), not the TMC5160.
-The TMC5160A data sheet rev 1.18 was downloaded from analog.com into
-`ref/tmc5160a_datasheet.pdf` (analog.com resets plain curl requests; a
-browser user agent and Accept header got through).
-The TMC2240 version of the board (36 V, integrated FETs) is commit d537741.
-C21..C26 and R15..R17 kept their numbers but are different parts now.
+## TMC5241 data sheet and package
+- `ref/tmc5241.pdf` is the TMC5241 data sheet rev 0 (08/25). The land
+  pattern is ADI/Maxim 90-0076 rev C (`ref/90-0076.pdf`, 38L TQFN 5x7,
+  package code T3857+1C). analog.com timed out for scripted downloads, so
+  the outline drawing 21-0172 is not in the repo.
+- The project footprint follows 90-0076: 0.25 x 0.75 mm pads, 4.88 mm
+  between the 12-pad rows, 6.85 mm between the 7-pad rows, EP 3.65 x 5.60.
+  KiCad's stock `WQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.65mm` is tagged
+  T3857-1C but has 0.8 mm pads, rows 4.9/6.9 and a 5.65 mm EP.
+  The EP has copper on both sides, 15 vias of 0.6/0.3 mm (the board's via
+  rule, so no widening after placement as the TQFP-48 needed) and six
+  paste windows, about 58% of the pad.
+- Pin numbers from the pin table, checked against the top view: pins
+  1..12 along one 7 mm side, counter clockwise. All 38 pins and the EP are
+  tested. Slashes in the data sheet names (CSN/AD2, DIAG1/SW) are
+  underscores in the symbol, so generated net names stay readable.
+- History: the TMC5160A with four SQJB68EP dual FETs is commit 59111f8
+  (last schematic) and 9fd8961 (last routed board); the TMC2240 version
+  is d537741. C21..C26,
+  C33..C35, R15..R17, R24, R25 and J4 kept their numbers; C23 (1u VCP),
+  C25 (2.2u VDD1V8), R15 (12k RREF) and R25 (nSLEEP pull-down) are
+  different parts or roles now.
 
-## TMC5160A at 48 V
-- Operating range: VS 10..55 V, VSA 10..50 V; absolute maximum 60 V
-  (64 V short peaks). Keep the supply at or below 50 V with VSA tied to VS.
-- VSA is tied to VS (standard circuit, Figure 3.1). Section 3.2 allows that
-  at 48 V when MOSFET Qg < 50 nC, chopper <= 40 kHz and the clock is the
-  internal 12 MHz. Estimated regulator dissipation at 48 V: 12 V regulator
-  36 V x (8 x 8 nC x 40 kHz) = 0.09 W (limit 0.5 W), 5 V regulator
-  43 V x 10 mA = 0.45 W (limit 1 W). An external 12 V gate supply on
-  VSA/12VOUT (Figure 3.2) is the fallback if the IC runs hot.
-- No overvoltage clamp on VM. A TVS that stands off 48 V clamps above the
-  60 V maximum, so regenerative energy (fast deceleration, driver disabled
-  while the motor spins) must go into the supply or a brake circuit.
+## TMC5241 at 48 V
+- VS 4.5..65 V, absolute maximum 70 V (TMC5160A: 55/60 V). 2 A RMS per
+  coil at 24 V, 1.7 A RMS at 48 V. RDS(on) high + low side 0.31 Ohm
+  typical, about 50% more when hot.
+- Full scale: R15 = 12k (the smallest allowed) gives 2.05 A RMS with
+  DRV_CONF current range 2 or 3 (KIFS 36 A x kOhm, Table 17). The
+  power-on range 0 gives 0.67 A RMS. GLOBALSCALER brings it down to the
+  current the board can take. Overcurrent trips at 5 A minimum in the
+  3 A range.
+- Heat: about 2 x I^2 x RDS(on) for the two bridges, conduction only.
+  1.7 A RMS: 1.8 W cold, 2.7 W hot. 1.2 A RMS: 0.9 W cold, 1.3 W hot.
+  Theta JA is 28 C/W on a four-layer JEDEC board and 38 C/W on one layer,
+  so this two-layer 42 mm board runs about 50 C over ambient at 1.2 A and
+  far too hot at 1.7 A continuous. The data sheet calls the thermal design
+  critical above 24 V or 1.5 A RMS. The TMC5160A version was capped at
+  1.6 A by FET heat.
+- Charge pump: the CPI-CPO capacitor swings over the whole supply (CPO
+  reaches VS + 2.7 V, 51 V at 48 V), so it is 22n 100V where the data
+  sheet says 50 V. VCP-VS sees only about 2.7 V (1u 25V).
+- No overvoltage clamp. The OV pin is the hook for one: open drain,
+  released while the internal ADC reads VS >= OVERVOLTAGE_VTH (VS =
+  ADC_VSUPPLY x 17.6 mV), chopping at 3-4 kHz. Figure 39 drives a logic
+  level MOSFET with a dump resistor to VS from OV with a 24k pull-up to
+  5 V. Not fitted, OV is unconnected. OV floats in sleep, so that pull-up
+  would switch the brake on while the driver sleeps.
 
-## MOSFETs and sense resistors
-- SQJB68EP-T1_BE3 (Vishay dual N, PowerPAK SO-8L Dual), one per half
-  bridge: 100 V, 92 mOhm max (162 mOhm at 125 C), Qg 4.7 nC typ / 8 nC
-  max, Qgd 1.3 nC, Vgs +-20 V, RthJA 85 C/W on 1 in^2. Chosen over the
-  CSD19537Q3 (12 mOhm, $1.39 at 40 pcs) for cost at 5-board quantities:
-  4 duals cost $14 against $56 for 8 singles (Mouser, 2026-10-12). The
-  CSD19538Q3A (59 mOhm single) was cheaper still but listed no stock.
-  Miller charge under 10 nC: DRVSTRENGTH=0, no gate resistor (section 3.3);
-  bootstrap 220 nF for Qg < 20 nC (Figure 3.1).
-- Pinout from the SQJB68EP data sheet page 1 and the case outline (doc
-  66934): top view with the leads at the bottom, pins 1..4 left to right
-  are S1 G1 S2 G2; drain paddle D1 is over pins 1-2, D2 over pins 3-4.
-  Footprint pads: D1 = 6, D2 = 5, matching KiCad's
-  Q_Dual_NMOS_S1G1S2G2D2D1 (unit 1 = pins 1 2 6, unit 2 = pins 3 4 5).
-  FET1 is the high side, FET2 the low side; S1 (pin 1) and D2 (right
-  paddle) must be joined on the board, which crosses the package.
-- Footprint pads from Vishay doc 63817 (minimum pads, PowerPAK SO-8L
-  Dual), y shifted +0.18 mm so the 4.90 x 4.37 mm body is centered. Each
-  drain paddle is three same-numbered pads (paddle plus two side tabs).
-  Paste covers the whole paddle; reduce it if the first boards float.
-- In the hand-placed schematic each old single FET became one unit at the
-  same position (identical G/D/S pin geometry), so no wires moved:
-  Q1 Q2 -> Q1 units 1 2, Q3 Q4 -> Q2, Q5 Q6 -> Q3, Q7 Q8 -> Q4.
-- RSENSE 0.15 Ohm (Stackpole CSRN2512FTR150, 2 W): 1.6 A RMS / 2.2 A peak
-  at full scale (data sheet table, chapter 9). The cap comes from the
-  FETs: at standstill one low side FET can carry the peak continuously,
-  2.2^2 x 0.15 Ohm (hot) = 0.7 W, about 60 C over ambient at 85 C/W. The
-  sense resistor sees the same 0.7 W. More current needs lower-resistance
-  FETs as well as a lower RSENSE.
-- Short detection must be desensitized for the higher on-resistance. At
-  2.2 A peak the low side check sees 0.36 V (hot FET) + 0.33 V (RSENSE) =
-  0.69 V, above the 0.55 V minimum of S2VS_LEVEL=6 (OTP default 6 or 12).
-  Use S2VS_LEVEL >= 9 (about 0.83 V minimum) and S2G_LEVEL >= 8 (high side
-  drop 0.36 V; level 6 minimum is 0.46 V). Levels interpolated linearly
-  between the data sheet's level 6 and level 15 limits.
-- 12VOUT uses a 1206 X7R 10 uF 25 V: at 12 V bias an 0805 10 uF keeps too
-  little of its value for the ">= 10x one bootstrap capacitor" rule.
-
-## TMC5160A pin strapping
-- SPI_MODE (22) high: SPI. TST_MODE (11) and CLK (12) to GND.
-- SD_MODE (21) is on GPIO18 (freed by the TMC2240's SLEEPN) with a 10k
-  pull-down. Low: internal ramp generator, ENCA/ENCB/ENCN are encoder
-  inputs, REFL/REFR are reference switch inputs. High: STEP/DIR on GPIO6/7,
-  and the same ENC pins become DcStep enable, DcStep gating and the DCO
-  output. The data sheet only describes SD_MODE as a strap; whether it can
-  change while VCC is up is untested, so set it before VM comes up.
-- ENCN_DCO is an output with SD_MODE high, so it reaches the TLE5012B IFC
-  net through 1k. With SD_MODE high keep the TLE5012B IIF outputs off, or
-  IFB enables DcStep.
-- DRV_ENN (28) has no internal pull (the TMC2240's did). 10k to 3V3 against
-  the MCU's ~50k reset pull-down holds 2.75 V, above VIH = 0.7 x VCC_IO
-  = 2.31 V, so the bridges stay off until firmware drives GPIO8 low.
-- DIAG0/DIAG1 keep 10k pull-ups (open drain needs 47k or less).
-- The exposed pad is pin 49 (GNDD/GNDP, low side gate driver ground).
+## TMC5241 pin strapping
+- UART_EN (12) and CLK (38) to GND: SPI, internal clock. AIN (4) to GND,
+  unused. The N.C. pins 19, 20, 31, 32 go to GND for cooling, which the
+  pin table allows. EP is GND.
+- There is no STEP/DIR input and no SD_MODE: the ramp generator always
+  runs. REFL/REFR (1, 2) are reference switch inputs, still on GPIO6/GPIO7
+  (labels TMC_STEP/TMC_DIR renamed TMC_REFL/TMC_REFR), so firmware can
+  stop the ramp from the angle sensor. DIAG0/DIAG1 can output STEP/DIR
+  for an external driver.
+- nSLEEP (33) on GPIO18 (the old SD_MODE) with R25 10k to GND. Low is
+  sleep: supplies off, every register cleared, bridges off, under 25 uA
+  from VS. A low pulse over 30 us is a reset; wake takes 2.5 ms. The pin
+  is VS rated with a 0.9 V threshold and an internal pull-down of 0.8 MOhm
+  minimum. Do not sleep or reset at speed (the motor feeds energy back).
+  Bring-up: DRV_ENN high, nSLEEP high, configure, then DRV_ENN low.
+  ```mermaid
+  gantt
+      title TMC5241 bring-up (ms)
+      dateFormat x
+      axisFormat %L
+      section nSLEEP GPIO18
+      low, asleep (R25)          :0, 1
+      high                       :1, 9
+      section TMC5241
+      waking, 2.5 ms             :1, 4
+      SPI configuration          :4, 7
+      section DRV_ENN GPIO8
+      high, bridges off (R24)    :0, 7
+      low, bridges on            :7, 9
+  ```
+- DRV_ENN (11) now has an internal pull-up, 60..140k. Against the MCU's
+  ~50k reset pull-down that settles anywhere from 1.1 to 2.4 V, so R24 10k
+  to 3V3 stays (2.75 V, above VIH = 2.31 V).
+- ENCA/ENCB/ENCN (10, 9, 8) are inputs with pull-ups. The 1k in series
+  with ENCN (R26) guarded against the TMC5160A's ENCN_DCO output and is
+  gone.
+- DIAG0/DIAG1 keep 10k pull-ups (4.7k..100k in open drain mode). DIAG0 is
+  held low while the IC is in reset.
 
 ## MCU choice
 The board went RP2040 -> ESP32-C5HF4 -> RP2040 -> RP2354A. The ESP32-C5 version
@@ -139,7 +152,8 @@ different parts now, so check the placement of every reused reference.
 - Erratum RP2350-E9 (a pad with its input buffer on, sitting between VIL
   and VIH, sources about 120 uA and latches near 2.2 V) is listed for the
   A2 stepping only. DigiKey sells the RP2354A only as A4 (SC1511-A4), so
-  R25 (SD_MODE) keeps 10k. On an A2 part it would need 8.2k or less. The
+  R25 (nSLEEP pull-down) keeps 10k. On an A2 part 120 uA would have to
+  stay under nSLEEP's 0.9 V threshold, so 6.8k or less. The
   VM_SENSE divider (5.3k source) feeds an ADC pin: firmware must clear the
   pad's input enable on GPIO26 either way (the SDK's adc_gpio_init does).
 
@@ -181,6 +195,18 @@ hand edits (DIAG0/DIAG1 labels at U1 left floating) carry over. R14.1 and
 R5.1 had wires straight to the old U1 and got labels instead. The regulator
 parts sit where U4 was.
 
+The TMC5160A -> TMC5241 swap followed the same recipe: 63 symbols, 125
+wires and 88 labels of the old block removed by cluster (no cluster mixed
+old and kept parts), the new block laid out alone with kicad-vis and
+pasted over the same area (offset 439.42, 58.42 mm). Boundary labels went
+global; TMC_ENN and TMC_SLEEPN came out as bare wires again (two pins in
+the block) and got global labels at R24 and R25. kicad-vis also left the
+motor outputs, CPI and IREF unlabeled, so they became Net-(J4-Pin_1) and
+the like, which the power net class pattern `/OUT*` does not match; local
+labels at U5 put the names back. The MCU side labels were renamed
+(TMC_REFL, TMC_REFR, TMC_SLEEPN). DIAG0/DIAG1 still reach only their
+pull-ups, and the "Selectable?" note sits beside them.
+
 ## DigiKey list
 - eparts-search returns the reel (TR) variant of most passives; use the MPN in
   the DigiKey list upload so packaging can be chosen there.
@@ -188,6 +214,24 @@ parts sit where U4 was.
   alternates are in DIGIKEY.md.
 - `tests/test_refs.py` checks that the order list names every generator
   reference exactly once and that quantities add up.
+
+## pcbnew scripting (KiCad 10.0.4)
+- KiCad's `pcbnew` module exists only for the system Python; the project
+  venv (mise Python 3.13) cannot import it, so the PCB tasks run
+  `$KICAD_PYTHON` (`/usr/bin/python3`, set in mise.toml).
+- Once `BOARD.Remove()` has run on a footprint, later footprint loads and
+  `BOARD.GetFootprints()` return uncast `SwigPyObject`s. `pcb_sync.py`
+  collects everything first and removes last.
+- `pcbnew.FootprintLoad()` returns an uncast object as well; the plugin
+  class works: `pcbnew.PCB_IO_KICAD_SEXPR().FootprintLoad(lib_dir, name)`.
+- `kicad-cli sch export netlist --format kicadxml` unescapes KiCad's
+  `{slash}` in generated net names (`unconnected-(U1-GPIO27{slash}ADC1-
+  Pad41)`), so pads given those names fail DRC schematic parity with
+  `net_conflict`. The s-expression netlist keeps the escape.
+- From the VS Code terminal, `kicad-vis render` dies in inkscape with a
+  GLib settings error (`org.gnome.settings-daemon.plugins.xsettings` has no
+  key `antialiasing`); it renders with `DISPLAY`, `WAYLAND_DISPLAY` and
+  `XDG_DATA_DIRS` unset.
 
 ## PCB floor plan
 The 42.2 mm square with 31 mm hole spacing is a NEMA17 back-mount: U3 sits
@@ -198,32 +242,31 @@ under J1). Keep a 6 mm radius around the center on the back free for the
 shaft magnet; nothing but U3 is inside it. M3 heads need about 3 mm radius
 around each hole on both sides.
 
-Top side, top to bottom: J4 and the two buttons on the top edge, the four
-dual FETs in a row (Q3 Q4 Q1 Q2 = 1B 2B 1A 2A, the order of U5's gate
-pins), R18 and R15 under them, U5, then J2, the crystal and J3 on the
-bottom edge. C19 (J2 side) and C35 (VM side) are the only parts that take
-the left and right edges below the FET row; J1 sits at the right edge
-beside the FET row. The placement is a table in `tools/pcb_place.py`;
-re-running it overwrites GUI moves.
+The placement is a table in `tools/pcb_place.py`; re-running it
+overwrites GUI moves. Since the TMC5241 swap the board is being placed
+again by hand: the routing was removed in the GUI and many parts sit
+outside the outline.
 
-- U5 is shifted right (x 103.9) and down (y 105.0) so its thermal vias and
-  back pad clear U3's pads on the back; its gate edge faces the FET row.
-- Each SQJB68EP's S1 lead is joined to the D2 paddle by a 0.5 mm trace
-  around the left side of the package and over the top (the data sheet
-  wants a pour, but the lead row and the D1 paddle block the direct way).
-  The FET pitch is 6.2 mm to leave a 1 mm gap for that trace between
-  neighbors. VM reaches the D1 paddles through two 0.8 mm vias each from
-  a pour on the back under the row.
-- J4's pin order 1A 2A 1B 2B against the FET order means the pairs cross:
-  phase A outputs run on the top at y 83.6 and 84.5, phase B on the back at
-  y 84.2 and 85.4, through vias at the ends of the output runs.
-- Low side sources: Q3's goes straight into R18's hot pad; Q4, Q1 and Q2
-  cross the gate fan-out on the back through 1.0 mm vias, ending in a via
-  inside the resistor's hot pad.
-- SRAH/SRBH (R19, R21) start at the sense resistors' hot pads (true
-  Kelvin). SRAL/SRBL (R20, R22) return through the GND plane, not a Kelvin
-  trace to the resistor's GND pad: at 2 A the plane drop over a few mm is
-  about 1 mV against 330 mV full scale.
+TMC5241 swap on the board (`mise run pcb-sync`, `tools/pcb_sync.py`): the
+four FETs, both sense resistors, the sense filters, the bootstrap and
+gate supply parts and R26 were deleted; U5, R15 and C25 got their new
+footprints at the old positions; every pad took the schematic's net and
+every footprint the new symbol's uuid, so a later "Update PCB from
+Schematic" in the GUI matches by link. The stage still has to be placed:
+VS caps at the two VS pin pairs (bridge A 26/30, bridge B 21/25), the
+charge pump caps at pins 16..18, R15 and C25 next to pins 3 and 5, J4
+beside the OUT pins, and as much GND copper and via area under the EP as
+the board allows (see TMC5241 at 48 V).
+
+The TMC5160A layout (commit 9fd8961), for reference: J4 and
+the two buttons on the top edge, the four dual FETs in a row under it
+with the sense resistors below, U5 under those, then J2, the crystal and
+J3 on the bottom edge. Each FET's S1 lead reached its D2 paddle by a
+0.5 mm trace around the package, VM came from a pour on the back through
+vias into the drain paddles, and the phase pairs crossed between layers
+on the way to J4. `tools/pcb_route.py` (removed with the FETs) laid that
+copper down locked before autorouting.
+
 - U1 is rotated so its SPI/STEP/DIR pins (1..15) face U5's digital edge
   across a corridor kept free of top side parts; with those pins facing
   the board edge the autorouter had to loop every driver line around the
@@ -238,10 +281,9 @@ re-running it overwrites GUI moves.
   0.4 mm pitch QFN-60 pads at all (a 0.2 mm trace centered on a 0.2 mm
   pad has exactly 0.2 mm to the neighbors, and the router needs margin),
   and it left over 120 of 142 connections unrouted.
-- Freerouting routes the rest. `tools/pcb_route.py` locks its copper, the
-  Specctra export writes locked tracks as `(type fix)`, and the planes (GND
-  on both layers, VM on the back) are exported as conduction areas, so the
-  autorouter neither moves them nor routes GND.
+- The Specctra export writes locked tracks as `(type fix)`, and the planes
+  (GND on both layers, VM on the back) are exported as conduction areas,
+  so the autorouter neither moves them nor routes GND.
 - Freerouting 2.1.0 from the CLI still opens its GUI; with an empty
   profile email it then shows a modal User Settings dialog after routing
   and never writes the session file (it also opens the GUI on whatever
@@ -249,17 +291,16 @@ re-running it overwrites GUI moves.
   logging on it looked like a hang at "traces not 45 degree".
   `tools/freerouting_profile.py` writes a dummy email into
   /tmp/freerouting/freerouting.json, telemetry off, before each run.
-- The TQFP-48 ThermalVias footprint has 0.2 mm via drills; the board rule
-  and the fab want 0.3 mm, so `tools/pcb_route.py` widens them to 0.6/0.3 in
-  place (DRC then reports a library mismatch for U5, expected).
 - Net-(J2-Pin_1) is still split from VM (see "Power?"): J2 pin 1 is wired
   to C19 only. The link to VM is one short trace from C19's + pad to the
   VM pour's left arm once the schematic decides.
 
 ## Routing result
-Pipeline: `pcb-place`, `pcb-route`, `pcb-fill`, `pcb-dsn`, `pcb-autoroute`,
-`pcb-ses`, `pcb-gnd`, `pcb-drc`. The power stage and VM distribution are
-hand-routed (locked); freerouting 2.1.0 routes the signals with 0.15 mm
+This is the TMC5160A board (commit 9fd8961); the TMC5241 board is not
+routed yet. Pipeline then: `pcb-place`, `pcb-route` (removed),
+`pcb-fill`, `pcb-dsn`, `pcb-autoroute`, `pcb-ses`, `pcb-gnd`, `pcb-drc`.
+The power stage and VM distribution were hand-routed (locked);
+freerouting 2.1.0 routes the signals with 0.15 mm
 rules and 0.5 mm vias in about four minutes for 30 passes. Over six
 placement variants it never got below about 20 open signal connections
 of 142 (the committed board: 21 after 60 passes, plus 30 GND pads and

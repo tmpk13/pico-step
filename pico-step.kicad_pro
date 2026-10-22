@@ -568,44 +568,16 @@
         "pattern": "/OUT*"
       },
       {
-        "netclass": "power",
-        "pattern": "/TMC_SA"
-      },
-      {
-        "netclass": "power",
-        "pattern": "/TMC_SB"
+        "netclass": "gate",
+        "pattern": "/TMC_VCP"
       },
       {
         "netclass": "gate",
-        "pattern": "/TMC_H*"
+        "pattern": "/TMC_CPI"
       },
       {
         "netclass": "gate",
-        "pattern": "/TMC_L*"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "Net-(U5-C*"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "TMC_12V"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "TMC_5V"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "TMC_VCP"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "TMC_CPI"
-      },
-      {
-        "netclass": "gate",
-        "pattern": "TMC_CPO"
+        "pattern": "/TMC_CPO"
       }
     ]
   },

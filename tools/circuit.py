@@ -14,10 +14,8 @@ import sys
 R0603 = "Resistor_SMD:R_0603_1608Metric"
 C0603 = "Capacitor_SMD:C_0603_1608Metric"
 C0805 = "Capacitor_SMD:C_0805_2012Metric"
-C1206 = "Capacitor_SMD:C_1206_3216Metric"
 C1210 = "Capacitor_SMD:C_1210_3225Metric"
 CP10 = "Capacitor_SMD:CP_Elec_10x10.5"
-R2512 = "Resistor_SMD:R_2512_6332Metric"
 
 components: list[dict] = []
 nets: dict[str, list[str]] = {}
@@ -208,7 +206,7 @@ groups.append({"name": "encoder", "stages": [
 
 # ---------------------------------------------------------------- motor supply
 # VM runs up to 48 V. The sense divider puts 48 V at 2.55 V and reaches the
-# 3.3 V ADC limit only at 62 V, past the TMC5160's 60 V absolute maximum.
+# 3.3 V ADC limit at 62 V, about the 63 V rating of the bulk capacitors.
 part(
     "J2", "Connector:Screw_Terminal_01x02", "VM",
     "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",
@@ -223,146 +221,94 @@ connect("VM_SENSE", "R12.2", "R13.1", "C20.1", "U1.40")  # GPIO26 ADC0
 
 groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13", "C20"]]})
 
-# ---------------------------------------------------------------- TMC5160
-# Gate driver and motion controller with eight external N-MOSFETs, per the
-# TMC5160A data sheet Figure 3.1 (Standard Application Circuit).
+# ---------------------------------------------------------------- TMC5241
+# Motion controller and driver with integrated 65 V bridges and current
+# sensing, per the TMC5241 data sheet Figure 50 (Standard Application
+# Circuit). 2 A RMS per coil at 24 V, 1.7 A RMS at 48 V.
 #
-# VSA is tied to VS. At 48 V the internal 11.5 V and 5 V regulators then
-# dissipate roughly 0.09 W and 0.45 W (8 x 8 nC max gates at a 40 kHz
-# chopper, 10 mA VCC at the internal 12 MHz clock), inside the 0.5 W and
-# 1 W limits. The data sheet allows this with gate charge under 50 nC, a
-# chopper at or below 40 kHz and no external clock above 12 MHz (section 3.2).
+# R15 (RREF) sets the full-scale current: 12k is the smallest allowed and
+# gives 2.05 A RMS with DRV_CONF current range 2 or 3 (KIFS 36 A x kOhm,
+# Table 17); firmware trims it with GLOBALSCALER/IRUN. The power-on default
+# range 0 gives 0.67 A RMS.
 #
-# Q1..Q4 are SQJB68EP dual N-MOSFETs, one per half bridge: FET1 (unit 1,
-# S1=1, G1=2, D1=6) is the high side, FET2 (unit 2, S2=3, G2=4, D2=5) the
-# low side; S1 and D2 join on the board. 100 V, 92 mOhm max (162 mOhm at
-# 125 C), Qg 4.7 nC typ / 8 nC max, Qgd 1.3 nC. Miller charge under 10 nC
-# runs at DRVSTRENGTH=0 with no gate resistor (section 3.3), and bootstrap
-# capacitors of 220 nF suit Qg under 20 nC (Figure 3.1).
-#
-# RSENSE 0.15 Ohm gives 1.6 A RMS (2.2 A peak) at GLOBALSCALER=0, IRUN=31
-# (section 9 table). The cap is set by the FETs, not the connector: at
-# standstill one low side FET can carry the peak continuously, 2.2^2 x
-# 0.15 = 0.7 W hot, about 60 C over ambient at 85 C/W. Sense resistor peak
-# dissipation is the same 0.7 W (2 W parts).
-QFET = "pico-step:Vishay_PowerPAK_SO-8L_Dual"
-QDUAL = "Transistor_FET:Q_Dual_NMOS_S1G1S2G2D2D1"
-part("U5", "pico-step:TMC5160A-TA", "TMC5160A-TA",
-     "Package_QFP:TQFP-48-1EP_7x7mm_P0.5mm_EP5x5mm_ThermalVias",
-     MPN="TMC5160A-TA", Manufacturer="Analog Devices")
-for i in range(1, 5):
-    for unit in (1, 2):
-        part(f"Q{i}", QDUAL, "SQJB68EP", QFET, unit=unit,
-             MPN="SQJB68EP-T1_BE3", Manufacturer="Vishay Siliconix")
-cap("C21", "100n 100V")         # VS pin
-cap("C22", "100n 100V")         # VSA pin
-cap("C23", "100n 100V")         # VCP to VS
+# The charge pump capacitor CPI-CPO swings over the whole supply, so it is
+# rated 100 V instead of the data sheet's 50 V. The VCP capacitor to VS sees
+# only the 2.7 V the pump adds.
+part("U5", "pico-step:TMC5241", "TMC5241",
+     "pico-step:ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias",
+     MPN="TMC5241ATU+T", Manufacturer="Analog Devices")
+cap("C21", "100n 100V")         # VS 26/30, bridge A
+cap("C22", "100n 100V")         # VS 21/25, bridge B
+cap("C23", "1u 25V")            # VCP to VS
 cap("C24", "22n 100V")          # CPI to CPO
-cap("C25", "10u 25V", C1206)    # 12VOUT, at least 10x one bootstrap capacitor
+cap("C25", "2.2u")              # VDD1V8
 cap("C26", "100n")              # VCC_IO
-cap("C27", "4.7u", C0805)       # 5VOUT
-cap("C28", "470n")              # VCC
-cap("C29", "220n")              # bootstrap CA1
-cap("C30", "220n")              # bootstrap CA2
-cap("C31", "220n")              # bootstrap CB1
-cap("C32", "220n")              # bootstrap CB2
 cap("C33", "2.2u 100V", C1210)  # bridge A
 cap("C34", "2.2u 100V", C1210)  # bridge B
 part("C35", "Device:C_Polarized", "100u 63V", CP10)
-part("R15", "Device:R", "0.15", R2512, MPN="CSRN2512FTR150", Manufacturer="Stackpole")
+res("R15", "12k")               # RREF, 1%
 res("R16", "10k")
 res("R17", "10k")
-part("R18", "Device:R", "0.15", R2512, MPN="CSRN2512FTR150", Manufacturer="Stackpole")
-res("R19", "47")
-res("R20", "47")
-res("R21", "47")
-res("R22", "47")
-res("R23", "2.2")
 res("R24", "10k")
 res("R25", "10k")
-res("R26", "1k")
 part("J4", "Connector_Generic:Conn_01x04", "Motor",
      "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical")
 
-connect("VM", "U5.33", "U5.4", "C21.1", "C22.1", "C23.1",
-        "Q1.6", "Q2.6", "Q3.6", "Q4.6", "C33.1", "C34.1", "C35.1")
-connect("TMC_VCP", "U5.34", "C23.2")
-connect("TMC_CPI", "U5.32", "C24.1")
-connect("TMC_CPO", "U5.31", "C24.2")
-connect("TMC_12V", "U5.3", "C25.1")
-connect("TMC_5V", "U5.5", "C27.1", "R23.1")
-connect("TMC_VCC", "U5.29", "R23.2", "C28.1")
-connect("+3V3", "U5.20", "C26.1", "R16.1", "R17.1", "R24.1")
-# SPI_MODE high: SPI. TST_MODE and CLK low: normal operation, internal clock.
-connect("+3V3", "U5.22")
-connect("GND", "U5.6", "U5.19", "U5.30", "U5.49", "U5.11", "U5.12",
-        "C21.2", "C22.2", "C25.2", "C26.2", "C27.2", "C28.2",
-        "C33.2", "C34.2", "C35.2", "R15.2", "R18.2", "R20.2", "R22.2", "R25.2")
-
-
-def half_bridge(n, q, out, gate_h, gate_l, boot, boot_pin, out_pin, sense):
-    """Dual FET q: FET1 high side (drain on VM), FET2 low side (source on
-    the phase sense node), S1 and D2 form the bridge center."""
-    connect(f"TMC_{gate_h[0]}", f"U5.{gate_h[1]}", f"{q}.2")
-    connect(f"TMC_{gate_l[0]}", f"U5.{gate_l[1]}", f"{q}.4")
-    connect(out, f"U5.{out_pin}", f"{q}.1", f"{q}.5", f"{boot}.2", f"J4.{n}")
-    connect(f"TMC_{boot_pin[0]}", f"U5.{boot_pin[1]}", f"{boot}.1")
-    connect(sense, f"{q}.3")
-
-
-half_bridge(1, "Q1", "OUT1A", ("HA1", 41), ("LA1", 39), "C29", ("CA1", 42), 40, "TMC_SA")
-half_bridge(2, "Q2", "OUT2A", ("HA2", 36), ("LA2", 38), "C30", ("CA2", 35), 37, "TMC_SA")
-half_bridge(3, "Q3", "OUT1B", ("HB1", 1), ("LB1", 47), "C31", ("CB1", 2), 48, "TMC_SB")
-half_bridge(4, "Q4", "OUT2B", ("HB2", 44), ("LB2", 46), "C32", ("CB2", 43), 45, "TMC_SB")
-
-# Sense resistors with 47R in each sense line (Figure 3.1). SRAL/SRBL go to
-# the GND end of their resistor; on the board that is a Kelvin trace.
-connect("TMC_SA", "R15.1", "R19.1")
-connect("TMC_SRAH", "R19.2", "U5.8")
-connect("TMC_SRAL", "R20.1", "U5.7")
-connect("TMC_SB", "R18.1", "R21.1")
-connect("TMC_SRBH", "R21.2", "U5.9")
-connect("TMC_SRBL", "R22.1", "U5.10")
+connect("VM", "U5.30", "U5.26", "U5.25", "U5.21", "C21.1", "C22.1", "C23.1",
+        "C33.1", "C34.1", "C35.1")
+connect("TMC_VCP", "U5.18", "C23.2")
+connect("TMC_CPI", "U5.16", "C24.1")
+connect("TMC_CPO", "U5.17", "C24.2")
+connect("TMC_1V8", "U5.5", "C25.1")
+connect("TMC_IREF", "U5.3", "R15.1")
+connect("+3V3", "U5.7", "C26.1", "R16.1", "R17.1", "R24.1")
+# UART_EN and CLK low: SPI, internal clock. AIN (0..1.25 V) is unused. The
+# N.C. pins go to GND for cooling, as the data sheet allows.
+connect("GND", "U5.6", "U5.23", "U5.28", "U5.39", "U5.12", "U5.38", "U5.4",
+        "U5.19", "U5.20", "U5.31", "U5.32",
+        "C21.2", "C22.2", "C25.2", "C26.2", "C33.2", "C34.2", "C35.2",
+        "R15.2", "R25.2")
+# Motor connector in the order 1A 2A 1B 2B.
+connect("OUT1A", "U5.29", "J4.1")
+connect("OUT2A", "U5.27", "J4.2")
+connect("OUT1B", "U5.22", "J4.3")
+connect("OUT2B", "U5.24", "J4.4")
 
 # MCU interface: SPI0 on GPIO2..5.
-connect("TMC_SCK", "U1.4", "U5.14")     # GPIO2 SPI0 SCK
-connect("TMC_SDI", "U1.5", "U5.15")     # GPIO3 SPI0 TX
-connect("TMC_SDO", "U1.7", "U5.16")     # GPIO4 SPI0 RX
-connect("TMC_CSN", "U1.8", "U5.13")     # GPIO5 SPI0 CSn
-# REFL_STEP / REFR_DIR: reference switch inputs with SD_MODE low, STEP/DIR
-# with SD_MODE high.
-connect("TMC_STEP", "U1.9", "U5.17")    # GPIO6
-connect("TMC_DIR", "U1.10", "U5.18")     # GPIO7
-# DRV_ENN has no internal pull. 10k to 3V3 against the MCU's ~50k reset
-# pull-down holds 2.75 V (VIH 0.7 x VCC_IO = 2.31 V): outputs stay off
-# until firmware drives GPIO8 low.
-connect("TMC_ENN", "U1.12", "U5.28", "R24.2")    # GPIO8
-connect("TMC_DIAG0", "U1.13", "U5.26", "R16.2")  # GPIO9
-connect("TMC_DIAG1", "U1.28", "U5.27", "R17.2")  # GPIO17
-# SD_MODE low (10k pull-down, GPIO18 left as input): internal ramp generator,
-# with the ENC pins as encoder inputs. GPIO18 high selects external
-# STEP/DIR, where ENCB/ENCA become DcStep enable/gating inputs and ENCN an
-# output; keep the TLE5012B IIF outputs off in that mode.
-connect("TMC_SD_MODE", "U1.29", "U5.21", "R25.1")  # GPIO18
+connect("TMC_SCK", "U1.4", "U5.35")     # GPIO2 SPI0 SCK
+connect("TMC_SDI", "U1.5", "U5.36")     # GPIO3 SPI0 TX
+connect("TMC_SDO", "U1.7", "U5.37")     # GPIO4 SPI0 RX
+connect("TMC_CSN", "U1.8", "U5.34")     # GPIO5 SPI0 CSn
+# Reference switch inputs of the ramp generator, driven by the MCU (no
+# STEP/DIR input on this part).
+connect("TMC_REFL", "U1.9", "U5.1")     # GPIO6
+connect("TMC_REFR", "U1.10", "U5.2")    # GPIO7
+# DRV_ENN has an internal ~100k pull-up, which loses to the MCU's ~50k reset
+# pull-down. 10k to 3V3 holds 2.75 V (VIH 0.7 x VCC_IO = 2.31 V): outputs
+# stay off until firmware drives GPIO8 low.
+connect("TMC_ENN", "U1.12", "U5.11", "R24.2")    # GPIO8
+connect("TMC_DIAG0", "U1.13", "U5.13", "R16.2")  # GPIO9
+connect("TMC_DIAG1", "U1.28", "U5.14", "R17.2")  # GPIO17
+# nSLEEP low is sleep with every register cleared; a >30 us low pulse is a
+# reset. The 10k pull-down keeps the driver asleep (bridges off, VS draw
+# under 25 uA) until firmware raises GPIO18. The pin is VS rated with a
+# 0.9 V input threshold, so 3.3 V drives it.
+connect("TMC_SLEEPN", "U1.29", "U5.33", "R25.1")  # GPIO18
 # The angle sensor's IIF outputs feed the encoder inputs, so firmware can
-# switch the TLE5012B to IIF and let the TMC5160 count. 1k limits the
-# current if ENCN_DCO drives against the sensor's IFC with SD_MODE high.
-connect("ENC_IFA", "U5.24")
-connect("ENC_IFB", "U5.23")
-connect("ENC_IFC", "R26.1")
-connect("TMC_ENCN", "R26.2", "U5.25")
+# switch the TLE5012B to IIF and let the TMC5241 count.
+connect("ENC_IFA", "U5.10")
+connect("ENC_IFB", "U5.9")
+connect("ENC_IFC", "U5.8")
 
 groups.append({"name": "driver", "stages": [
-    ["R24", "R25", "R16", "R17", "R26"],
+    ["R24", "R25", "R16", "R17"],
     ["U5"],
-    ["C29", "C30", "C31", "C32"],
-    ["Q1", "Q2", "Q3", "Q4"],
-    ["R19", "R20", "R15", "R21", "R22", "R18"],
-    ["C33", "C34", "C35", "J4"],
+    ["R15", "C25", "C23", "C24"],
+    ["J4"],
 ]})
 groups.append({"name": "driver_supply", "stages": [
-    ["C21", "C22", "C23", "C24"],
-    ["C25", "C27", "R23", "C28", "C26"],
+    ["C21", "C22", "C33", "C34", "C35"],
+    ["C26"],
 ]})
 
 unused_gpio = ["U1.2", "U1.3", "U1.31", "U1.32", "U1.33", "U1.34",
@@ -377,7 +323,9 @@ circuit = {
     "nets": [{"name": n, "pins": p} for n, p in nets.items()],
     "groups": groups,
     "power": {"VBUS": {"style": "label"}, "VM": {"style": "label"}},
-    "no_connect": ["J1.A8", "J1.B8", "U2.4", *unused_gpio, *unused_qspi],
+    # OV (open drain, released above OVERVOLTAGE_VTH) is meant for a brake
+    # chopper MOSFET; none is fitted.
+    "no_connect": ["J1.A8", "J1.B8", "U2.4", "U5.15", *unused_gpio, *unused_qspi],
 }
 
 json.dump(circuit, sys.stdout, indent=1)

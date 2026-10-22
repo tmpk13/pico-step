@@ -1,7 +1,7 @@
 # pico-step
 
-Closed-loop stepper driver board: RP2354A + TMC5160A motion controller and
-gate driver (four external dual MOSFETs) + TLE5012B magnetic angle sensor.
+Closed-loop stepper driver board: RP2354A + TMC5241 motion controller and
+driver (integrated 65 V bridges) + TLE5012B magnetic angle sensor.
 USB-C powered logic, separate motor supply (VM) up to 48 V.
 
 The schematic is placed by hand in KiCad. `tools/circuit.py` is the reference
@@ -14,8 +14,8 @@ mise run parity    # schematic nets vs tools/circuit.py
 mise run erc
 mise run test
 mise run render    # build/pico-step.png
+mise run pcb-sync  # board <- schematic (footprints, values, nets), keeps placement
 mise run pcb-place # placement table -> board (overwrites GUI moves)
-mise run pcb-route # locked power stage copper and VM pour (before autorouting)
 mise run pcb-dsn   # build/pico-step.dsn for freerouting
 mise run pcb-autoroute # FREEROUTING=<launcher or jar> freerouting -> build/pico-step.ses
 mise run pcb-ses   # import the session and refill zones

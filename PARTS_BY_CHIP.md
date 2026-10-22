@@ -1,6 +1,6 @@
 # Parts by chip
 
-Every one of the 84 parts on the board, grouped by the chip it supports.
+Every one of the 63 parts on the board, grouped by the chip it supports.
 
 ## U1 RP2354A
 
@@ -17,24 +17,19 @@ Every one of the 84 parts on the board, grouped by the chip it supports.
 | SWD header | J3 |
 | Status LED (GPIO25) | R8 330, D1 |
 
-## U5 TMC5160A
+## U5 TMC5241
 
 | Function | Parts |
 | --- | --- |
-| Power bridges, one dual FET per half bridge (A: Q1 Q2, B: Q3 Q4) | Q1..Q4 SQJB68EP |
-| Bootstrap, CA1 CA2 CB1 CB2 | C29..C32 220n |
-| Sense resistors, phase A / B | R15 0.15, R18 0.15 |
-| Sense line filters, SRAH SRAL SRBH SRBL | R19..R22 47 |
-| Bridge decoupling | C33 2.2u 100V, C34 2.2u 100V, C35 100u 63V |
-| VS / VSA decoupling | C21 100n 100V, C22 100n 100V |
-| Charge pump | C23 100n 100V (VCP), C24 22n 100V (CPI-CPO) |
-| 12VOUT gate supply | C25 10u 25V |
-| 5VOUT and VCC | C27 4.7u, R23 2.2, C28 470n |
+| VS decoupling, bridge A (26/30) / bridge B (21/25) | C21 100n 100V, C33 2.2u 100V / C22 100n 100V, C34 2.2u 100V |
+| VS bulk | C35 100u 63V |
+| Charge pump | C23 1u 25V (VCP-VS), C24 22n 100V (CPI-CPO) |
+| VDD1V8 regulator | C25 2.2u |
 | VCC_IO | C26 100n |
+| Full-scale current (RREF) | R15 12k |
 | DIAG0/DIAG1 pull-ups | R16 10k, R17 10k |
 | DRV_ENN pull-up (off during MCU reset) | R24 10k |
-| SD_MODE pull-down (motion controller mode) | R25 10k |
-| ENCN series (contention guard) | R26 1k |
+| nSLEEP pull-down (asleep until firmware wakes it) | R25 10k |
 | Motor connector | J4 |
 
 ## U3 TLE5012B

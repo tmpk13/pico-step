@@ -23,7 +23,7 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "J4": (97.00, 82.00, 0, "F"),        # motor, top edge
     "SW1": (90.50, 82.15, 90, "F"),      # BOOTSEL, top left corner
     "SW2": (109.90, 82.15, 90, "F"),     # RESET, top right corner
-    "J1": (117.25, 92.80, 90, "F"),      # USB-C, right edge beside the FET row
+    "J1": (117.25, 92.80, 90, "F"),      # USB-C, right edge
     "J2": (95.20, 115.35, 180, "F"),    # VM screw terminal, bottom edge
     "J3": (108.00, 119.60, 90, "F"),    # SWD, bottom edge right
     "D1": (83.00, 92.00, 0, "F"),       # LED at the left edge
@@ -36,43 +36,28 @@ PLACEMENT: dict[str, tuple[float, float, float, str]] = {
     "R11": (91.00, 98.90, 90, "B"),
     "R14": (91.00, 102.00, 90, "B"),
     # ---- power stage ------------------------------------------------------
-    # FET row under the motor connector, leads toward the driver.
-    "Q3": (90.20, 89.80, 0, "F"),        # phase B, half bridge 1
-    "Q4": (96.40, 89.80, 0, "F"),        # phase B, half bridge 2
-    "Q1": (102.60, 89.80, 0, "F"),       # phase A, half bridge 1
-    "Q2": (108.80, 89.80, 0, "F"),       # phase A, half bridge 2
-    "R18": (94.60, 97.00, 0, "F"),       # RSENSE B, hot end left
-    "R15": (108.50, 96.30, 0, "F"),      # RSENSE A, hot end left
+    # Positions from the TMC5160A layout (external FET row under the motor
+    # connector); the TMC5241 parts that kept their references stay there
+    # until the stage is placed again.
     "U5": (103.90, 105.00, 0, "F"),     # thermal vias clear of U3 on the back
+    "R15": (108.50, 96.30, 0, "F"),      # RREF
     "C19": (85.00, 103.20, 90, "F"),     # J2 side bulk, left edge
     "C35": (115.30, 106.50, -90, "F"),   # VM bulk, right edge, VM pad up
     "C34": (84.40, 94.60, -90, "B"),     # bridge B VM decoupling, VM pad up
-    "C33": (107.20, 99.60, -90, "B"),   # bridge A VM decoupling below R15, VM pad up
-    "C32": (100.50, 95.00, 90, "B"),     # bootstrap CB2
-    "C29": (112.40, 97.50, 90, "B"),     # bootstrap CA1
+    "C33": (107.20, 99.60, -90, "B"),   # bridge A VM decoupling, VM pad up
     # left of U5 (top)
-    "C31": (97.10, 100.40, 0, "F"),      # bootstrap CB1
-    "C25": (96.60, 103.60, 90, "F"),     # 12VOUT
+    "C25": (96.60, 103.60, 90, "F"),     # VDD1V8
     "C21": (97.10, 107.50, 0, "F"),      # VS, VM pad left
-    "C27": (92.50, 107.80, 0, "F"),      # 5VOUT
-    "R20": (92.50, 103.90, 0, "F"),      # 47R SRAL
-    "R22": (92.50, 105.80, 0, "F"),      # 47R SRBL
-    "R19": (92.50, 100.10, 0, "F"),      # 47R SRAH
-    "R21": (92.50, 102.00, 0, "F"),      # 47R SRBH
-    "R23": (107.40, 108.30, 0, "B"),    # 2.2R 5VOUT-VCC, below the U5 back pad
     # below U5 (top)
     "C26": (108.80, 111.20, 90, "F"),   # VCC_IO
-    "R25": (108.80, 114.30, 90, "F"),   # SD_MODE pull-down
+    "R25": (108.80, 114.30, 90, "F"),   # nSLEEP pull-down
     # right of U5 (back side)
-    "C30": (110.30, 100.50, 90, "B"),    # bootstrap CA2
     "C23": (110.30, 106.70, 90, "B"),    # VCP-VS, VM pad down
-    "C22": (112.40, 100.70, -90, "B"),   # VSA, VM pad up
+    "C22": (112.40, 100.70, -90, "B"),   # VS, VM pad up
     "C24": (110.30, 103.60, 90, "B"),    # CPI-CPO
-    "C28": (112.40, 103.80, 90, "B"),    # VCC
     "R24": (114.10, 101.00, 90, "B"),    # ENN pull-up
     "R16": (115.60, 109.50, 90, "B"),    # DIAG0 pull-up
     "R17": (114.10, 104.50, 90, "B"),    # DIAG1 pull-up
-    "R26": (107.90, 104.50, 90, "B"),    # 1k ENCN
     # ---- MCU block, back side -------------------------------------------
     "U1": (100.90, 113.30, 180, "B"),   # SPI pins on the right side facing U5, regulator pins at the top left
     "C12": (94.30, 107.50, 180, "B"),   # COUT, +1V1 pad toward L1

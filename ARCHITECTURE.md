@@ -18,19 +18,16 @@ classDiagram
         BOOTSEL, RESET, SWD J3
         LED GPIO25
     }
-    class TMC5160A_U5 {
+    class TMC5241_U5 {
+        motion controller + integrated 65 V bridges
         SPI0 GPIO2..5
-        REFL_STEP GPIO6, REFR_DIR GPIO7
+        REFL GPIO6, REFR GPIO7 reference inputs
         DRV_ENN GPIO8 10k pull-up
-        SD_MODE GPIO18 10k pull-down
+        nSLEEP GPIO18 10k pull-down
         DIAG0/DIAG1 10k pull-ups
         ENCA/B/N from TLE5012B IFA/IFB/IFC
-        VSA tied to VS, internal 12V and 5V regulators
-    }
-    class Bridges_Q1_Q4 {
-        SQJB68EP dual x4, 100 V, one per half bridge
-        Phase A Q1 Q2, phase B Q3 Q4
-        RSENSE 0.15R per phase, 1.6 A RMS full scale
+        RREF 12k, 2.05 A RMS full scale
+        OV brake output unused
     }
     class Motor_J4 {
         OUT1A OUT2A OUT1B OUT2B
@@ -50,35 +47,35 @@ classDiagram
     USB_C_J1 --> RP2354A_U1 : USB 27R series
     LDO_U2 --> RP2354A_U1 : +3V3
     LDO_U2 --> TLE5012B_U3 : +3V3
-    RP2354A_U1 --> TMC5160A_U5 : SPI0 + STEP/DIR + SD_MODE
+    RP2354A_U1 --> TMC5241_U5 : SPI0 + REFL/REFR + ENN + nSLEEP
     TLE5012B_U3 --> RP2354A_U1 : angle (SSC)
-    MotorSupply_J2 --> TMC5160A_U5 : VM (VS, VSA)
-    MotorSupply_J2 --> Bridges_Q1_Q4 : VM
-    TLE5012B_U3 --> TMC5160A_U5 : IIF encoder
-    TMC5160A_U5 --> Bridges_Q1_Q4 : gate drive, sense
-    Bridges_Q1_Q4 --> Motor_J4 : coils
+    MotorSupply_J2 --> TMC5241_U5 : VM (VS x4)
+    TLE5012B_U3 --> TMC5241_U5 : IIF encoder
+    TMC5241_U5 --> Motor_J4 : coils
     MotorSupply_J2 --> RP2354A_U1 : VM_SENSE
 ```
 
 ## Board floor plan
 
+The TMC5241 stage is being placed again; this is the target arrangement.
+
 ```mermaid
 flowchart TB
     subgraph top [Top side]
-        J4[J4 motor, top edge] --- FETs[Q3 Q4 Q1 Q2 dual FETs in a row]
-        FETs --- RS[R18 R15 sense resistors] --- U5[TMC5160A]
+        J4[J4 motor, top edge] --- U5[TMC5241, OUT pins toward J4]
+        U5 --- CAPS[C21 C22 C33 C34 at the VS pin pairs, C23 C24 charge pump]
         J1[J1 USB-C, right edge]
         C19[C19 bulk, left edge] --- J2[J2 VM in, bottom edge]
-        C35[C35 bulk, right edge] --- U5
-        U5 --- Y1[Y1 crystal, bottom edge] --- J3[J3 SWD, bottom edge]
+        C35[C35 bulk] --- U5
+        Y1[Y1 crystal, bottom edge] --- J3[J3 SWD, bottom edge]
     end
     subgraph back [Back side, faces the motor]
-        VM[VM pour under the FET row, vias into the drain paddles]
+        EP[GND copper under U5's exposed pad]
         U3[TLE5012B at the shaft axis]
         U1[RP2354A, SPI pins toward U5, regulator at its top left]
         U2[AP2112K and USB parts under J1]
     end
-    FETs -. vias .- VM
-    U5 -. SPI, STEP/DIR .- U1
+    U5 -. EP vias .- EP
+    U5 -. SPI, REFL/REFR, ENN, nSLEEP .- U1
     U3 -. SSC, IIF .- U1
 ```

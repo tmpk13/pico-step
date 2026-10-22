@@ -31,6 +31,9 @@ def num(v: float) -> str:
     return "0" if s == "-0" else s
 
 
+SMD_LAYERS = ("F.Cu", "F.Mask", "F.Paste")
+
+
 @dataclass
 class Pad:
     number: str
@@ -39,6 +42,12 @@ class Pad:
     w: float
     h: float
     shape: str = "roundrect"
+    layers: tuple[str, ...] = SMD_LAYERS
+    # A drill makes a plated through hole on every copper layer, tented by
+    # the mask (thermal vias).
+    drill: float = 0.0
+    # Heat sink pads join zones solidly instead of through thermal spokes.
+    heatsink: bool = False
 
 
 @dataclass
@@ -148,11 +157,21 @@ class Footprint:
 
         for p in self.pads:
             rr = " (roundrect_rratio 0.25)" if p.shape == "roundrect" else ""
+            hs = " (property pad_prop_heatsink)" if p.heatsink else ""
+            # Pads that share a number and position (EP copper on both
+            # sides) need distinct uuids.
+            extra = () if p.layers == SMD_LAYERS and not p.drill else (*p.layers, p.drill)
+            zc = " (zone_connect 2)" if p.heatsink else ""
+            if p.drill:
+                kind = f"thru_hole circle (at {num(p.x)} {num(p.y)}) (size {num(p.w)} {num(p.h)}) (drill {num(p.drill)})"
+                layers = '(layers "*.Cu") (remove_unused_layers no)'
+                rr = ""
+            else:
+                kind = f"smd {p.shape} (at {num(p.x)} {num(p.y)}) (size {num(p.w)} {num(p.h)})"
+                layers = "(layers " + " ".join(f'"{lay}"' for lay in p.layers) + ")"
             out.append(
-                f'\t(pad "{p.number}" smd {p.shape} (at {num(p.x)} {num(p.y)}) '
-                f"(size {num(p.w)} {num(p.h)}) "
-                '(layers "F.Cu" "F.Mask" "F.Paste")' + rr + "\n"
-                f'\t\t(uuid "{self._uid("pad", p.number, p.x, p.y)}"))\n'
+                f'\t(pad "{p.number}" {kind}{hs} {layers}{rr}{zc}\n'
+                f'\t\t(uuid "{self._uid("pad", p.number, p.x, p.y, *extra)}"))\n'
             )
 
         if self.model:
@@ -211,37 +230,47 @@ def l_abracon_aota_b201610() -> Footprint:
     )
 
 
-def vishay_powerpak_so8l_dual() -> Footprint:
-    # Vishay "Recommended Minimum Pad for PowerPAK SO-8L Dual" (document
-    # 63817, page 9 of the SQJB68EP data sheet). Package outline from
-    # document 66934: body 4.90 x 4.37 mm (D1 x E1), leads L1 = 1.07 mm, so
-    # the land pattern origin sits 0.18 mm below the body center; every y
-    # here is shifted by +0.18 to center the body.
-    #
-    # Top view, leads at the bottom: pins 1..4 left to right are S1, G1, S2,
-    # G2. Drain D1 is the left paddle (over pins 1-2), D2 the right one. The
-    # paddles are numbered 6 (D1) and 5 (D2) to match KiCad's
-    # Q_Dual_NMOS_S1G1S2G2D2D1 symbol. Each paddle is a 1.73 x 3.99 mm pad
-    # plus two side tabs, all with the same number.
-    dy = 0.18
-    pads = [Pad(str(i + 1), -1.905 + 1.27 * i, 2.715 + dy, 0.41, 0.72) for i in range(4)]
-    for num, s in (("6", -1), ("5", 1)):
-        pads += [
-            Pad(num, s * 1.115, -1.08 + dy, 1.73, 3.99, "rect"),
-            Pad(num, s * 2.215, -2.87 + dy, 0.47, 0.41, "rect"),
-            Pad(num, s * 2.2725, 0.0 + dy, 0.585, 0.51, "rect"),
-        ]
+def adi_tqfn38_5x7() -> Footprint:
+    # Maxim/ADI land pattern 90-0076 rev C (38L TQFN 5x7, package codes
+    # T3857-1, T3857+1, T3857+1C; outline 21-0172), used by the TMC5241:
+    # 0.25 x 0.75 mm pads on a 0.5 mm pitch, 4.88 mm between the centers of
+    # the 12-pad rows and 6.85 mm between the 7-pad rows, exposed pad land
+    # 3.65 x 5.60 mm. Turned so the long axis is vertical: pins 1..12 run
+    # down the left side, then counter clockwise (TMC5241 pin configuration,
+    # top view).
+    pitch, pw, pl = 0.5, 0.25, 0.75
+    xc, yc = 4.88 / 2, 6.85 / 2
+    pads = [Pad(str(1 + i), -xc, -2.75 + pitch * i, pl, pw) for i in range(12)]
+    pads += [Pad(str(13 + i), -1.5 + pitch * i, yc, pw, pl) for i in range(7)]
+    pads += [Pad(str(20 + i), xc, 2.75 - pitch * i, pl, pw) for i in range(12)]
+    pads += [Pad(str(32 + i), 1.5 - pitch * i, -yc, pw, pl) for i in range(7)]
+    # Exposed pad: copper on both sides joined by 15 vias (0.6/0.3 mm, the
+    # board's via rule) tented on the back, so it is GND and the heat path.
+    ep_w, ep_h = 3.65, 5.60
+    pads.append(Pad("39", 0, 0, ep_w, ep_h, "rect", ("F.Cu", "F.Mask"), heatsink=True))
+    pads.append(Pad("39", 0, 0, ep_w, ep_h, "rect", ("B.Cu",), heatsink=True))
+    pads += [
+        Pad("39", x, y, 0.6, 0.6, "circle", drill=0.3, heatsink=True)
+        for y in (-2.2, -1.1, 0.0, 1.1, 2.2) for x in (-1.1, 0.0, 1.1)
+    ]
+    # Paste in six 1.4 mm windows, about 58% of the exposed pad, so the
+    # package does not float on a solid paste layer.
+    pads += [
+        Pad("", x, y, 1.4, 1.4, layers=("F.Paste",))
+        for y in (-1.85, 0.0, 1.85) for x in (-0.85, 0.85)
+    ]
     return Footprint(
-        name="Vishay_PowerPAK_SO-8L_Dual",
-        descr="Vishay PowerPAK SO-8L Dual, minimum pads per Vishay doc 63817 (SQJB68EP)",
-        tags="Vishay PowerPAK SO-8L dual MOSFET SQJB68EP",
-        body_w=4.90,
-        body_h=4.37,
+        name="ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias",
+        descr="38L TQFN 5x7 mm, 0.5 mm pitch, land pattern per ADI/Maxim 90-0076 rev C (T3857+1C, TMC5241), thermal vias",
+        tags="TQFN-38 T3857-1 T3857+1C 21-0172 90-0076 TMC5241",
+        body_w=5.0,
+        body_h=7.0,
         pads=pads,
+        model="${KICAD9_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/WQFN-38-1EP_5x7mm_P0.5mm_EP3.15x5.15mm.step",
     )
 
 
-FOOTPRINTS = [pg_dso_8, l_abracon_aota_b201610, vishay_powerpak_so8l_dual]
+FOOTPRINTS = [pg_dso_8, l_abracon_aota_b201610, adi_tqfn38_5x7]
 
 STOCK_FP_DIR = Path("/usr/share/kicad/footprints")
 
