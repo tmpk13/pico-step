@@ -234,17 +234,20 @@ groups.append({"name": "motor_supply", "stages": [["J2"], ["C19"], ["R12", "R13"
 # The charge pump capacitor CPI-CPO swings over the whole supply, so it is
 # rated 100 V instead of the data sheet's 50 V. The VCP capacitor to VS sees
 # only the 2.7 V the pump adds.
+#
+# The four VS pins are one net. As on ADI's TMC5241-EVKIT, the ceramics
+# go in pairs at the two ends of the VS/OUT pin row.
 part("U5", "pico-step:TMC5241", "TMC5241",
      "pico-step:ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias",
      MPN="TMC5241ATU+T", Manufacturer="Analog Devices")
-cap("C21", "100n 100V")         # VS 26/30, bridge A
-cap("C22", "100n 100V")         # VS 21/25, bridge B
+cap("C21", "100n 100V")         # VS, pin 30 end
+cap("C22", "100n 100V")         # VS, pin 21 end
 cap("C23", "1u 25V")            # VCP to VS
 cap("C24", "22n 100V")          # CPI to CPO
 cap("C25", "2.2u")              # VDD1V8
 cap("C26", "100n")              # VCC_IO
-cap("C33", "2.2u 100V", C1210)  # bridge A
-cap("C34", "2.2u 100V", C1210)  # bridge B
+cap("C33", "2.2u 100V", C1210)  # VS, pin 30 end
+cap("C34", "2.2u 100V", C1210)  # VS, pin 21 end
 part("C35", "Device:C_Polarized", "100u 63V", CP10)
 res("R15", "12k")               # RREF, 1%
 res("R16", "10k")

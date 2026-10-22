@@ -82,6 +82,27 @@ rated 63 V or more.
   5 V. Not fitted, OV is unconnected. OV floats in sleep, so that pull-up
   would switch the brake on while the driver sleeps.
 
+## TMC5241-EVKIT reference
+`ref/tmc5241-evkit.pdf` (user guide rev 0) has the schematic (page 12),
+BOM and placement (Figure 5) of ADI's board. IC301 sits in the same
+orientation as our footprint, pin 1 at the top left.
+- VS: the four pins (VS1..VS4 = 21, 25, 26, 30) are one +VM net, with no
+  pin assigned to a bridge. Two 100n/100V 0603 and two 1u/100V 0805
+  ceramics sit on that net, placed as one 100n + 1u pair at each end of
+  the VS/OUT side: C305/C307 at the pin 30/31 corner, C306/C308 at the pin
+  20/21 corner. Nothing sits on the top side at the middle pair 25/26.
+  The drawing shows no copper, so how 25/26 join the ends (and the layer
+  count) is not visible.
+- Charge pump: C304 1u/16V VCP-VS and C303 22n/100V CPI-CPO, both under
+  the bottom row near pins 16..18. The 100 V CPI-CPO part agrees with ours.
+- Left side: C302 2.2u (VDD1V8) and C301 100n (VCC_IO).
+- Bulk: two 150u/100V electrolytics (Panasonic EEU-FS2A151), one above
+  and one below the IC, and an SMCJ54A TVS at the supply input.
+- Brake output: OV drives the gate of a DMN10H220L-7 (100 V, SOT-23) with
+  a 24k pull-up to a 5 V rail made from VM; the brake resistor is
+  external on J303 between VM and the drain, with a PMEG10010 diode across
+  it and a 5k6 1 W + LED indicator.
+
 ## TMC5241 pin strapping
 - UART_EN (12) and CLK (38) to GND: SPI, internal clock. AIN (4) to GND,
   unused. The N.C. pins 19, 20, 31, 32 go to GND for cooling, which the
@@ -252,11 +273,12 @@ four FETs, both sense resistors, the sense filters, the bootstrap and
 gate supply parts and R26 were deleted; U5, R15 and C25 got their new
 footprints at the old positions; every pad took the schematic's net and
 every footprint the new symbol's uuid, so a later "Update PCB from
-Schematic" in the GUI matches by link. The stage still has to be placed:
-VS caps at the two VS pin pairs (bridge A 26/30, bridge B 21/25), the
-charge pump caps at pins 16..18, R15 and C25 next to pins 3 and 5, J4
-beside the OUT pins, and as much GND copper and via area under the EP as
-the board allows (see TMC5241 at 48 V).
+Schematic" in the GUI matches by link. The stage still has to be placed,
+following the TMC5241-EVKIT (see that section): C21/C33 at the pin 30
+corner and C22/C34 at the pin 21 corner, the middle VS pair 25/26 joined
+to them, C23 and C24 under pins 16..18, R15 and C25 next to pins 3 and 5,
+J4 beside the OUT pins, and as much GND copper and via area under the EP
+as the board allows (see TMC5241 at 48 V).
 
 The TMC5160A layout (commit 9fd8961), for reference: J4 and
 the two buttons on the top edge, the four dual FETs in a row under it

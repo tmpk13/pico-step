@@ -21,7 +21,7 @@ Every one of the 63 parts on the board, grouped by the chip it supports.
 
 | Function | Parts |
 | --- | --- |
-| VS decoupling, bridge A (26/30) / bridge B (21/25) | C21 100n 100V, C33 2.2u 100V / C22 100n 100V, C34 2.2u 100V |
+| VS decoupling, pin 30 end / pin 21 end of the VS/OUT row | C21 100n 100V, C33 2.2u 100V / C22 100n 100V, C34 2.2u 100V |
 | VS bulk | C35 100u 63V |
 | Charge pump | C23 1u 25V (VCP-VS), C24 22n 100V (CPI-CPO) |
 | VDD1V8 regulator | C25 2.2u |
