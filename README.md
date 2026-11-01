@@ -25,7 +25,7 @@ mise run pcb-render # build/pcb-top.png, build/pcb-bottom.png
 ```
 
 The PCB is a 42 mm NEMA17 back-mount, 2 layers, 0.15 mm rules; the floor
-plan is in `NOTES.md`.
+plan is in `notes/pcb.md`.
 
 See `ARCHITECTURE.md` for the block diagram, `BOM.md` for sourced parts,
 `PARTS_BY_CHIP.md` for which parts support which chip,
