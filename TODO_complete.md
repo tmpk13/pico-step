@@ -14,3 +14,4 @@
 - PCB updated from the schematic; every part placed (`tools/pcb_place.py`).
 - PCB: TLE5012B on the back at the shaft axis (board center).
 - Driver swapped TMC5160A + 4x SQJB68EP -> TMC5241 (integrated 65 V bridges, 2 A RMS): symbol from data sheet rev 0 (39 pins tested), project TQFN-38 footprint from land pattern 90-0076 rev C with 0.3 mm thermal vias (tested), Figure 50 support parts (RREF 12k, 100 V charge pump cap), nSLEEP on GPIO18. Swapped in place in the hand-placed schematic (ERC clean, parity shows only the existing hand edits); board synced from the schematic with the new `pcb-sync` task, placement kept. DigiKey list 63 parts. Old TMC5160A placement table entries, the FET pre-route script and the Vishay footprint removed.
+- DigiKey list checked line by line for 5 boards (2026-11-09), including the resistors never searched; eight parts with no stock replaced (DIGIKEY.md).

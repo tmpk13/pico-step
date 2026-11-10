@@ -26,7 +26,10 @@
       2.5 ms wake, DRV_CONF current range 2 (3 A full scale with RREF 12k),
       GLOBALSCALER/IRUN for the chosen current, then DRV_ENN low. Never
       sleep or reset while the motor turns fast.
-- [ ] Check stock for the resistors not searched (DIGIKEY.md).
+- [ ] Schematic and board: set C11 and C12 to 4.7u in the KiCad GUI, then
+      `mise run pcb-sync`. They still read 1u from the RP2040 design;
+      `tools/circuit.py`, BOM.md and the DigiKey list have 4.7u (RP2350
+      data sheet 6.3.8, notes/circuit.md).
 - [ ] Settle the hand edits that differ from `tools/circuit.py`
       (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and
       TMC5241 DIAG0/DIAG1 not wired to MCU GPIO9/GPIO17 ("Selectable?"
