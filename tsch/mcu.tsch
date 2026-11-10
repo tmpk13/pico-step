@@ -73,7 +73,7 @@ footprint = "LED_SMD:LED_0603_1608Metric"
     C3..C8 decouple the six IOVDD pins, C9 USB_OTP_VDD and QSPI_IOVDD, C10 ADC_AVDD, C11 VREG_VIN.                                                    |                        |              +-------+
     Core regulator per RP2350 data sheet 6.3.8: C12 is COUT, C36 sits at DVDD pin 23, C13 and C14 at pins 6 and 39.                                   |                        |                 2|
     L1 is polarity marked: its dot (pin 1) goes on +1V1. VREG_AVDD is filtered by R27 and C17.                                                        |                  USB_DP|52---[USB_DP]     |
-                                                                                                                                                      |                  USB_DM|51---[USB_DM]    GND
+    Y1 is an ABM8-272-T3 (CL 10 pF): 15p loads, 1k on XOUT.                                                                                           |                  USB_DM|51---[USB_DM]    GND
                                                                                                                                                       |                        |
                                                                                                                                                       |                        |
                                                                                                                                                       |               QSPI_SCLK|56x

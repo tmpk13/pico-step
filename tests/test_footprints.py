@@ -1,15 +1,13 @@
-"""Cross-check the circuit description against the footprints it names.
+"""Cross-check the schematic against the footprints it names.
 
-ERC and the kicad-vis netlist proof only look at symbols. A pin number
-that has no pad on the footprint (or a pad no pin reaches) passes both and
-only shows up as an unconnected pad after "Update PCB from Schematic".
+ERC and tsch's netlist proof only look at symbols. A pin number that has
+no pad on the footprint (or a pad no pin reaches) passes both and only
+shows up as an unconnected pad after updating the board.
 """
 
 from __future__ import annotations
 
-import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -20,15 +18,6 @@ STOCK = Path("/usr/share/kicad/footprints")
 sys.path.insert(0, str(ROOT / "tools"))
 
 import footprints  # noqa: E402
-
-
-@pytest.fixture(scope="module")
-def circuit() -> dict:
-    out = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "circuit.py")],
-        check=True, capture_output=True, text=True,
-    ).stdout
-    return json.loads(out)
 
 
 def footprint_file(ref: str) -> Path:
@@ -42,31 +31,31 @@ def pad_names(path: Path) -> set[str]:
     return {p for p in re.findall(r'\(pad "([^"]*)"', path.read_text()) if p}
 
 
-def used_pins(circuit: dict) -> dict[str, set[str]]:
+def used_pins(schematic: dict) -> dict[str, set[str]]:
     used: dict[str, set[str]] = {}
-    endpoints = [p for n in circuit["nets"] for p in n["pins"]] + circuit["no_connect"]
+    endpoints = [p for n in schematic["nets"] for p in n["pins"]] + schematic["no_connect"]
     for ep in endpoints:
         ref, pin = ep.split(".", 1)
         used.setdefault(ref, set()).add(pin)
     return used
 
 
-def test_footprints_exist(circuit):
-    for c in circuit["components"]:
+def test_footprints_exist(schematic):
+    for c in schematic["components"]:
         assert footprint_file(c["footprint"]).is_file(), c["footprint"]
 
 
-def test_every_pin_has_a_pad(circuit):
-    used = used_pins(circuit)
-    for c in circuit["components"]:
+def test_every_pin_has_a_pad(schematic):
+    used = used_pins(schematic)
+    for c in schematic["components"]:
         pads = pad_names(footprint_file(c["footprint"]))
         missing = used.get(c["ref"], set()) - pads
         assert not missing, f"{c['ref']} pins {missing} not on {c['footprint']}"
 
 
-def test_every_pad_is_used(circuit):
-    used = used_pins(circuit)
-    for c in circuit["components"]:
+def test_every_pad_is_used(schematic):
+    used = used_pins(schematic)
+    for c in schematic["components"]:
         pads = pad_names(footprint_file(c["footprint"]))
         orphan = pads - used.get(c["ref"], set())
         assert not orphan, f"{c['ref']} pads {orphan} on no net and not no_connect"
@@ -92,16 +81,16 @@ def test_generated_library_is_current():
         assert path.read_text() == fp.render(), f"rerun tools/footprints.py for {fp.name}"
 
 
-def test_tmc5241_symbol_has_every_pin_once():
-    import symbols
-
-    nums = [p.number for p in symbols.tmc5241().pins()]
-    assert sorted(nums, key=int) == [str(n) for n in range(1, 40)]
+def u5_pin_names(schematic: dict) -> dict[int, str]:
+    return {int(p.split(".")[1]): name for p, name in schematic["pin_names"].items()
+            if p.startswith("U5.")}
 
 
-def test_tmc5241_pin_names_match_data_sheet():
-    import symbols
+def test_tmc5241_symbol_has_every_pin_once(schematic):
+    assert sorted(u5_pin_names(schematic)) == list(range(1, 40))
 
+
+def test_tmc5241_pin_names_match_data_sheet(schematic):
     # TMC5241 data sheet Rev. 0, Pin Descriptions and TQFN pin
     # configuration, "/" written as "_". 39 is the exposed pad (GND).
     expected = {
@@ -114,15 +103,14 @@ def test_tmc5241_pin_names_match_data_sheet():
         33: "nSLEEP", 34: "CSN_AD2", 35: "SCK_AD1", 36: "SDI_AD0",
         37: "SDO_NAO", 38: "CLK", 39: "EP",
     }
-    got = {int(p.number): p.name for p in symbols.tmc5241().pins()}
-    assert got == expected
+    assert u5_pin_names(schematic) == expected
 
 
-def test_tmc5241_support_circuit(circuit):
+def test_tmc5241_support_circuit(schematic):
     """Supply, strap and output pins per the data sheet's Figure 50 and pin
     table: VS on the motor supply, VCC_IO on 3V3, VDD1V8 and IREF each to one
     part going to GND, SPI and internal clock straps low, OV unused."""
-    nets = {n["name"]: set(n["pins"]) for n in circuit["nets"]}
+    nets = {n["name"]: set(n["pins"]) for n in schematic["nets"]}
 
     def net_of(pin):
         hits = [name for name, pins in nets.items() if pin in pins]
@@ -134,7 +122,7 @@ def test_tmc5241_support_circuit(circuit):
     # AGND, PGND, EP, UART_EN, CLK, AIN and the four N.C. pins.
     for p in (6, 23, 28, 39, 12, 38, 4, 19, 20, 31, 32):
         assert net_of(f"U5.{p}") == "GND", p
-    assert "U5.15" in circuit["no_connect"]
+    assert "U5.15" in schematic["no_connect"]
     for pin in ("U5.5", "U5.3"):
         others = nets[net_of(pin)] - {pin}
         assert len(others) == 1
@@ -178,10 +166,3 @@ def test_tqfn38_matches_land_pattern():
     assert all(p.drill == 0.3 and abs(p.x) + 0.3 < 3.65 / 2 and abs(p.y) + 0.3 < 5.60 / 2
                for p in vias)
 
-
-def test_symbol_library_is_current():
-    import symbols
-
-    text = (ROOT / "lib" / "pico-step.kicad_sym").read_text()
-    for make in symbols.SYMBOLS:
-        assert symbols.render(make()) in text

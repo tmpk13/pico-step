@@ -16,38 +16,29 @@ run = "uv pip install pytest"
 description = "Generate project footprints into lib/pico-step.pretty"
 run = "python tools/footprints.py"
 
-[tasks.symbols]
-description = "Generate project symbols into lib/pico-step.kicad_sym"
-run = "python tools/symbols.py"
-
 [tasks.sch]
-description = "Generate build/pico-step.gen.kicad_sch from tools/circuit.py (the project schematic is hand-placed)"
-depends = ["footprints", "symbols"]
-# kicad-vis searches KICAD9_SYMBOL_DIR after its own KiCad 10 library.
-env = { KICAD9_SYMBOL_DIR = "{{config_root}}/lib" }
-run = [
-    "mkdir -p build",
-    "python tools/circuit.py > build/circuit.json",
-    "kicad-vis layout build/circuit.json -o build/pico-step.gen.kicad_sch --json > build/layout.json",
-    "python -c \"import json,sys;d=json.load(open('build/layout.json'));print('ok',d['ok'],d.get('stats'));sys.exit(0 if d['ok'] else 1)\"",
-    "python ~/.claude/skills/kicad-schematic/fixjustify.py build/pico-step.gen.kicad_sch",
-    "python tools/set_erc.py",
-]
+description = "Build tsch/ into pico-step.kicad_sch and its sheets, proven with kicad-cli (refuses to overwrite a schematic saved from KiCad)"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "python tools/tsch_sch.py"
 
-[tasks.parity]
-description = "List nets that differ between pico-step.kicad_sch and tools/circuit.py"
-run = "python tools/parity.py"
+[tasks.sch-check]
+description = "Check the tsch/ drawing for format and connection errors without KiCad"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "$TSCH check tsch/project.toml"
 
 [tasks.render]
-description = "Render the schematic to build/pico-step.png"
-run = "kicad-vis render pico-step.kicad_sch -o build/pico-step.png"
+description = "Render each schematic sheet to build/tsch/pico-step-<sheet>.png"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "$TSCH render tsch/project.toml -o build/tsch"
 
 [tasks.erc]
-description = "Run KiCad ERC on the schematic"
+description = "Run KiCad ERC on the schematic with the project's rule severities"
+depends = ["sch"]
 run = "kicad-cli sch erc --severity-error --exit-code-violations -o build/erc.rpt pico-step.kicad_sch"
 
 [tasks.test]
 description = "Run tests"
+depends = ["sch"]
 run = "pytest -q --tb=short tests"
 
 [tasks.pcb-place]
@@ -56,6 +47,7 @@ run = "$KICAD_PYTHON tools/pcb_place.py"
 
 [tasks.pcb-sync]
 description = "Update the board from the schematic (footprints, values, fields, nets), keeping the placement"
+depends = ["sch"]
 run = "$KICAD_PYTHON tools/pcb_sync.py"
 
 [tasks.pcb-fill]
@@ -110,22 +102,3 @@ run = [
     "inkscape build/pcb-bottom.svg --export-type=png --export-filename=build/pcb-bottom.png --export-width=1500",
 ]
 
-[tasks.tsch-check]
-description = "Check the text-schematic drawing in tsch/ (TSCH points at the tsch binary)"
-env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
-run = "$TSCH check tsch/project.toml"
-
-[tasks.tsch]
-description = "Build the tsch/ drawing into build/tsch/pico-step.kicad_sch and prove it with kicad-cli"
-env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
-run = "$TSCH verify tsch/project.toml -o build/tsch"
-
-[tasks.tsch-parity]
-description = "List nets and parts that differ between pico-step.kicad_sch and the tsch/ drawing"
-depends = ["tsch"]
-run = "python tools/parity.py --tsch build/tsch/pico-step.kicad_sch"
-
-[tasks.tsch-render]
-description = "Render each tsch/ sheet to build/tsch/pico-step-<sheet>.png"
-env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
-run = "$TSCH render tsch/project.toml -o build/tsch"

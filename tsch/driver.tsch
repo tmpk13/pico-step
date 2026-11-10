@@ -55,8 +55,12 @@ footprint = "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
                                                                  GND  |    AGND  PGND  PGND   EP    NC    NC    NC    NC    VDD1V8       IREF   |
                                                                       +-------------------------------------------------------------------------+
                                                                            6|   23|   28|   39|   19|   20|   31|   32|      5|          3|
-                                                                            *-----*-----*-----*-----*-----*-----*-----+       |           |
+                                                                            *-----*-----*-----*-----*-----*-----*-----+       |           |           J4 order 1A 2A 1B 2B: coil 1 on pins 1 and 3, coil 2 on 2 and 4.
                                                                             |                                                === C25      #  R15
                                                                            GND                                                |  2.2u     #  12k
                                                                                                                              GND          |
                                                                                                                                          GND
+
+
+
+                                         Strapping, RREF, pull-up and charge pump ratings: notes/driver.md.

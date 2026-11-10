@@ -26,18 +26,16 @@
       2.5 ms wake, DRV_CONF current range 2 (3 A full scale with RREF 12k),
       GLOBALSCALER/IRUN for the chosen current, then DRV_ENN low. Never
       sleep or reset while the motor turns fast.
-- [ ] Schematic and board: set C11 and C12 to 4.7u in the KiCad GUI, then
-      `mise run pcb-sync`. They still read 1u from the RP2040 design;
-      `tools/circuit.py`, BOM.md and the DigiKey list have 4.7u (RP2350
-      data sheet 6.3.8, notes/circuit.md).
-- [ ] Settle the hand edits that differ from `tools/circuit.py`
-      (`mise run parity`): VM split from J2/C19/R12 ("Power?" note) and
-      TMC5241 DIAG0/DIAG1 not wired to MCU GPIO9/GPIO17 ("Selectable?"
-      note; their global labels at U1 are unconnected). Then update one or
-      the other.
+- [ ] Settle two open schematic decisions in tsch/: J2/C19/R12 sit on
+      VM_IN, not yet joined to VM (note on the power sheet), and TMC5241
+      DIAG0/DIAG1 reach only their pull-ups while MCU GPIO9/GPIO17 carry
+      unconnected TMC_DIAG0/TMC_DIAG1 labels (note on the driver sheet).
+- [ ] Decide whether to take KiCad 10's USB4105 footprint changes
+      (`mise run footprints`, notes/circuit.md): shield pads become
+      mechanical instead of heatsink; the board's J1 must then be updated.
 - [ ] PCB routing: the board has no tracks since the GUI re-placement.
       Route after placing the TMC5241 stage; a 4-layer stackup with GND
       and 3V3 planes also cools U5 (28 against 38 C/W). The freerouting
       pipeline and what helped it are in notes/pcb.md, Routing result.
-- [ ] PCB: the J2/C19 net is still split from VM (one short link from
-      C19's + pad to the VM pour's left arm once the schematic decides).
+- [ ] PCB: the VM_IN net (J2/C19) is still split from VM (one short link
+      from C19's + pad to the VM pour's left arm once the schematic decides).

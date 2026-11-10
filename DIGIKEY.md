@@ -14,8 +14,8 @@ Notes:
   orientation, and the RP2350 regulator is sensitive to it.
 - U5 is TMC5241ATU+T, which DigiKey sells as cut tape (2314 in stock,
   $12.79 each at 1, $10.05 at 10). TMC5241ATU+ is the same part in trays.
-- C11 and C12 are 4.7u (GRM188R61E475KE11D), as in `tools/circuit.py` and
-  RP2350 data sheet 6.3.8; the schematic and board still read 1u (TODO.md).
+- C11 and C12 are 4.7u (GRM188R61E475KE11D), as in `tsch/mcu.tsch` and
+  RP2350 data sheet 6.3.8.
 - Eight parts had no DigiKey stock in any packaging on 2026-11-09 and were
   replaced by same-package, same-rating parts:
   - Yageo RC0603FR-07 10k, 330R, 100R and 100k: the same RC0603FR resistor

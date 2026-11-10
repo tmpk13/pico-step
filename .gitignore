@@ -11,3 +11,10 @@ fp-info-cache
 ~*.lck
 ref/
 _autosave-*
+# Generated from tsch/ by mise run sch
+/pico-step.kicad_sch
+/power.kicad_sch
+/mcu.kicad_sch
+/encoder.kicad_sch
+/driver.kicad_sch
+/tsch.kicad_sym

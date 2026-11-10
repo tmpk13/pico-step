@@ -13,10 +13,6 @@
   `{slash}` in generated net names (`unconnected-(U1-GPIO27{slash}ADC1-
   Pad41)`), so pads given those names fail DRC schematic parity with
   `net_conflict`. The s-expression netlist keeps the escape.
-- From the VS Code terminal, `kicad-vis render` dies in inkscape with a
-  GLib settings error (`org.gnome.settings-daemon.plugins.xsettings` has no
-  key `antialiasing`); it renders with `DISPLAY`, `WAYLAND_DISPLAY` and
-  `XDG_DATA_DIRS` unset.
 
 ## PCB floor plan
 The 42.2 mm square with 31 mm hole spacing is a NEMA17 back-mount: U3 sits

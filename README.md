@@ -4,20 +4,17 @@ Closed-loop stepper driver board: RP2354A + TMC5241 motion controller and
 driver (integrated 65 V bridges) + TLE5012B magnetic angle sensor.
 USB-C powered logic, separate motor supply (VM) up to 48 V.
 
-The schematic is placed by hand in KiCad. `tools/circuit.py` is the reference
-netlist; `mise run parity` lists where the two differ. `tsch/` redraws the
-same schematic as plain text for the text-schematic tool `tsch` (set `TSCH`
-to its binary when it is not on the PATH).
+The schematic is drawn as text in `tsch/` for the text-schematic tool
+`tsch` (set `TSCH` to its binary when it is not on the PATH); `mise run sch`
+builds it into `pico-step.kicad_sch`, which is generated and not committed.
 
 ```sh
 mise run install   # test deps
-mise run sch       # footprints + build/pico-step.gen.kicad_sch + ERC severities
-mise run parity    # schematic nets vs tools/circuit.py
+mise run sch-check # check the tsch/ drawing (fast, no KiCad)
+mise run sch       # tsch/ -> pico-step.kicad_sch + sheets, proven with kicad-cli
 mise run erc
 mise run test
-mise run render    # build/pico-step.png
-mise run tsch-parity # tsch/ drawing -> build/tsch, nets and parts vs the hand schematic
-mise run tsch-render # build/tsch/pico-step-<sheet>.png
+mise run render    # build/tsch/pico-step-<sheet>.png
 mise run pcb-sync  # board <- schematic (footprints, values, nets), keeps placement
 mise run pcb-place # placement table -> board (overwrites GUI moves)
 mise run pcb-dsn   # build/pico-step.dsn for freerouting

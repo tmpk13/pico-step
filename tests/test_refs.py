@@ -1,48 +1,32 @@
 """Reference designator checks.
 
-The schematic and board are edited in the KiCad GUI as well as generated, so
-their reference sets are compared with the generator to catch a rename made
-in only one place.
+The board is updated from the schematic and the DigiKey list is written by
+hand, so both reference sets are compared with the schematic's to catch a
+part added, removed or renamed in only one place.
 """
 
 from __future__ import annotations
 
-import json
 import re
-import subprocess
-import sys
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
-@pytest.fixture(scope="module")
-def circuit() -> dict:
-    out = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "circuit.py")],
-        check=True, capture_output=True, text=True,
-    ).stdout
-    return json.loads(out)
-
-
-def refs_in(path: Path) -> set[str]:
-    text = path.read_text()
-    # Schematic instances carry the placed reference; the Reference property
-    # in its embedded library symbols is only the prefix ("C", "R").
-    if path.suffix == ".kicad_sch":
-        return set(re.findall(r'\(reference "([^"#][^"]*)"\)', text))
+def board_refs() -> set[str]:
+    text = (ROOT / "pico-step.kicad_pcb").read_text()
     return set(re.findall(r'\(property "Reference" "([^"#][^"]*)"', text))
 
 
-@pytest.mark.parametrize("board_file", ["pico-step.kicad_sch", "pico-step.kicad_pcb"])
-def test_kicad_refs_match_generator(circuit, board_file):
-    gen = {c["ref"] for c in circuit["components"]}
-    assert refs_in(ROOT / board_file) == gen
+def schematic_refs(schematic: dict) -> set[str]:
+    return {c["ref"] for c in schematic["components"]}
 
 
-def test_digikey_list_covers_generator(circuit):
+def test_board_refs_match_schematic(schematic):
+    assert board_refs() == schematic_refs(schematic)
+
+
+def test_digikey_list_covers_schematic(schematic):
     import csv
 
     with open(ROOT / "digikey_list.csv", newline="") as f:
@@ -50,4 +34,4 @@ def test_digikey_list_covers_generator(circuit):
     refs = [r for row in rows for r in row["Customer Reference"].split()]
     assert len(refs) == len(set(refs))
     assert sum(int(row["Quantity"]) for row in rows) == len(refs)
-    assert set(refs) == {c["ref"] for c in circuit["components"]}
+    assert set(refs) == schematic_refs(schematic)

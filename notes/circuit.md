@@ -19,12 +19,19 @@ Taken from the TLE5012B data sheet Figure 40 (1.31 x 0.65 mm pads, 1.27
 pitch, 5.69 mm row center to center), not KiCad's IPC SOIC-8 (1.95 x 0.6).
 
 ## USB-C shield pin: S1 vs SH
-kicad-vis embeds symbols from the KiCad 10.0.3 AppImage library, where the
-USB-C shield is pin "SH" and the GCT USB4105 footprint pads are "SH". The
-system KiCad 10.0.4 library names both "S1". Mixing the two leaves the
-shield pads with no net and no check reports it. The project carries its own
-footprint copy with "SH" pads, and `tests/test_footprints.py` checks that
-every circuit pin exists as a pad on the named footprint and vice versa.
+The KiCad 10.0.3 AppImage library names the USB-C shield pin and the GCT
+USB4105 footprint pads "SH"; the system KiCad 10.0.4 library names both
+"S1". Mixing the two leaves the shield pads with no net and no check
+reports it. The project carries its own footprint copy with "SH" pads, the
+drawing names J1's shield pin SH, and `tests/test_footprints.py` checks
+that every schematic pin exists as a pad on its footprint and vice versa.
+
+`tools/footprints.py` rebuilds that copy from the system library. Under the
+current system library the result also differs from the committed file
+(shield pads `pad_prop_mechanical` instead of `pad_prop_heatsink`, NPTH
+layers `*.Cu`), and the board's J1 then fails DRC's library match. So
+`mise run sch` no longer runs it; `mise run footprints` stays a separate,
+deliberate step.
 
 ## Power
 Logic is USB powered (VBUS -> AP2112K-3.3). Motor supply VM enters on J2,
