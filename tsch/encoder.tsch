@@ -1,0 +1,34 @@
++++
+title = "Angle sensor"
+[default.R]
+footprint = "Resistor_SMD:R_0603_1608Metric"
+[default.C]
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+[part.U3]
+footprint = "pico-step:Infineon_PG-DSO-8"
+fields = { MPN = "TLE5012BE5000XUMA1", Manufacturer = "Infineon" }
+pins = { 1 = "bidirectional", 2 = "input", 3 = "input", 4 = "bidirectional", 5 = "bidirectional", 6 = "power_in", 7 = "power_in", 8 = "output" }
++++
+                                                       +3V3
+                                                        |
+                                                        *---------+
+                                        U3              |        === C18
+                                        TLE5012BE5000  6|         |  100n
+                                        +---------------------+  GND
+                                        |              VDD    |
+                      R9                |                     |
+    [ENC_SCK]---------[==]-------------2|SCK               IFA|5----[ENC_IFA]
+                      100               |                     |
+                                        |                     |
+                      R10               |                     |
+    [ENC_CSQ]---------[==]-------------3|CSQ               IFB|8----[ENC_IFB]
+                      100               |                     |
+                                        |                     |
+                      R11               |                     |
+   [ENC_DATA]---*-----[==]-------------4|DATA              IFC|1----[ENC_IFC]
+                |     470               |                     |
+                |                       |              GND    |
+          R14   |                       +---------------------+
+[ENC_TX]--[==]--+                                      7|
+          4.7k                                          |
+                                                       GND

@@ -57,3 +57,29 @@ pull-ups, and the "Selectable?" note sits beside them.
   alternates are in DIGIKEY.md.
 - `tests/test_refs.py` checks that the order list names every generator
   reference exactly once and that quantities add up.
+
+## Text drawing (tsch/)
+`tsch/` draws the hand schematic again as text for `tsch`, the
+text-schematic tool (one character is one 1.27 x 2.54 mm cell; `tsch spec`
+prints the format). It is an experiment beside the hand schematic, which
+stays the source for `pcb-sync`. `mise run tsch-parity` proves the two
+equal: all 54 multi-pin nets match pin for pin. The one intended part
+difference is C11/C12, drawn at 4.7u where the hand schematic still reads
+1u (see TODO).
+
+- Four sheets (power, mcu, encoder, driver) joined by global labels and
+  power ports. The RP2354A is two units: U1A holds the supply pins and the
+  core regulator, U1B the IO.
+- tsch draws a horizontal two-pin part with pin 1 on the left, so L1, R5
+  and R8 are drawn vertical (pin 1 on top) to keep the hand schematic's pin
+  numbering. L1's pin 1 is the polarity dot and must stay on +1V1.
+- tsch has no label in the middle of a wire, so a directly wired net stays
+  unnamed. The motor outputs carry local labels at both U5 and J4. In the
+  multi-sheet build they are named `/driver/OUT1A`, and the charge pump
+  nets `Net-(U5-VCP)` and the like, so the board's net class patterns
+  (`/OUT*`, `/TMC_VCP`, `/TMC_CPI`, `/TMC_CPO`) would need new patterns
+  before this drawing could drive the board.
+- Switches and the crystal are plain boxes; tsch has no glyph for them.
+- The build directory has no `pico-step` footprint library, so ERC there
+  warns `footprint_link_issues` for J1, U3, L1 and U5; it does not affect
+  the netlist.

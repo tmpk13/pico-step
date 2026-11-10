@@ -5,7 +5,9 @@ driver (integrated 65 V bridges) + TLE5012B magnetic angle sensor.
 USB-C powered logic, separate motor supply (VM) up to 48 V.
 
 The schematic is placed by hand in KiCad. `tools/circuit.py` is the reference
-netlist; `mise run parity` lists where the two differ.
+netlist; `mise run parity` lists where the two differ. `tsch/` redraws the
+same schematic as plain text for the text-schematic tool `tsch` (set `TSCH`
+to its binary when it is not on the PATH).
 
 ```sh
 mise run install   # test deps
@@ -14,6 +16,8 @@ mise run parity    # schematic nets vs tools/circuit.py
 mise run erc
 mise run test
 mise run render    # build/pico-step.png
+mise run tsch-parity # tsch/ drawing -> build/tsch, nets and parts vs the hand schematic
+mise run tsch-render # build/tsch/pico-step-<sheet>.png
 mise run pcb-sync  # board <- schematic (footprints, values, nets), keeps placement
 mise run pcb-place # placement table -> board (overwrites GUI moves)
 mise run pcb-dsn   # build/pico-step.dsn for freerouting

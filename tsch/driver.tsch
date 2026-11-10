@@ -1,0 +1,62 @@
++++
+title = "TMC5241 motion controller and driver"
+power = ["VM"]
+[default.R]
+footprint = "Resistor_SMD:R_0603_1608Metric"
+[default.C]
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+[part.U5]
+footprint = "pico-step:ADI_TQFN-38-1EP_5x7mm_P0.5mm_EP3.65x5.6mm_ThermalVias"
+fields = { MPN = "TMC5241ATU+T", Manufacturer = "Analog Devices" }
+pins = { 1 = "input", 2 = "input", 4 = "input", 5 = "power_out", 6 = "power_in", 7 = "power_in", 8 = "input", 9 = "input", 10 = "input", 11 = "input", 12 = "input", 13 = "output", 14 = "bidirectional", 15 = "open_collector", 21 = "power_in", 22 = "output", 23 = "power_in", 24 = "output", 25 = "power_in", 26 = "power_in", 27 = "output", 28 = "power_in", 29 = "output", 30 = "power_in", 33 = "input", 34 = "input", 35 = "input", 36 = "input", 37 = "tri_state", 38 = "input", 39 = "power_in" }
+[part.C33]
+footprint = "Capacitor_SMD:C_1210_3225Metric"
+[part.C34]
+footprint = "Capacitor_SMD:C_1210_3225Metric"
+[part.C35]
+footprint = "Capacitor_SMD:CP_Elec_10x10.5"
+[part.J4]
+footprint = "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
++++
+
+
+                                                                                          DIAG0 and DIAG1 reach only their pull-ups: not wired to MCU GPIO9 and GPIO17 yet.
+
+                                                                               +3V3                                                               VM
+                                                                                |                                                                  |
+                                                                                *-----+          +3V3        +3V3                                  *-------*---------------*---------------*---------------*---------------+
+                                                                                |     |           |           |                                    |       |               |               |               |               |
+                                                                                |    === C26      #  R16      #  R17                               |      === C21         === C33         === C22         === C34          +
+                                                      +3V3                      |     |  100n     #  10k      #  10k                               |       |  100n 100V    |  2.2u 100V    |  100n 100V    |  2.2u 100V   === C35
+                                                       |                        |    GND          |           |         U5                         |      GND             GND             GND             GND              |  100u 63V
+                                                       #  R24                  7|               13|         14|         TMC5241                    |                                                                      GND
+                                                       #  10k         +-------------------------------------------------------------------------+  |
+                                                       |              |       VCC_IO            DIAG0      DIAG1_SW                             |  |
+                                            [TMC_ENN]--*------------11|DRV_ENN                                                                VS|30*
+                                                                      |                                                                       VS|26*       VM
+                                                        [TMC_CSN]---34|CSN_AD2                                                                VS|25*        |
+                                                        [TMC_SCK]---35|SCK_AD1                                                                VS|21+       === C23
+                                                        [TMC_SDI]---36|SDI_AD0                                                                  |           |  1u 25V
+                                                        [TMC_SDO]---37|SDO_NAO                                                               VCP|18---------+
+                                                                      |                                                                         |
+                                                       [TMC_REFL]----1|REFL                                                                  CPI|16---------+
+                                                       [TMC_REFR]----2|REFR                                                                     |           |
+                                                                      |                                                                         |          === C24
+                                                        [ENC_IFA]---10|ENCA                                                                     |           |  22n 100V
+                                                        [ENC_IFB]----9|ENCB                                                                  CPO|17---------+
+                                                        [ENC_IFC]----8|ENCN                                                                     |                              J4
+                                                                      |                                                                       OV|15x                           Motor
+                                         [TMC_SLEEPN]--*------------33|nSLEEP                                                                   |                              +-----+
+                                                       |              |                                                                    OUT1A|29----OUT1A      OUT1A-------1|     |
+                                                       #  R25     +-12|UART_EN                                                             OUT2A|27----OUT2A      OUT2A-------2|     |
+                                                       #  10k     *-38|CLK                                                                 OUT1B|22----OUT1B      OUT1B-------3|     |
+                                                       |          *--4|AIN                                                                 OUT2B|24----OUT2B      OUT2B-------4|     |
+                                                      GND         |   |                                                                         |                              +-----+
+                                                                 GND  |    AGND  PGND  PGND   EP    NC    NC    NC    NC    VDD1V8       IREF   |
+                                                                      +-------------------------------------------------------------------------+
+                                                                           6|   23|   28|   39|   19|   20|   31|   32|      5|          3|
+                                                                            *-----*-----*-----*-----*-----*-----*-----+       |           |
+                                                                            |                                                === C25      #  R15
+                                                                           GND                                                |  2.2u     #  12k
+                                                                                                                             GND          |
+                                                                                                                                         GND

@@ -1,0 +1,85 @@
++++
+title = "RP2354A microcontroller"
+[default.R]
+footprint = "Resistor_SMD:R_0603_1608Metric"
+[default.C]
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+[part.U1]
+footprint = "Package_DFN_QFN:QFN-60-1EP_7x7mm_P0.4mm_EP3.4x3.4mm"
+fields = { MPN = "SC1511-A4", Manufacturer = "Raspberry Pi" }
+pins = { 1 = "power_in", 2 = "bidirectional", 3 = "bidirectional", 4 = "bidirectional", 5 = "bidirectional", 6 = "power_in", 7 = "bidirectional", 8 = "bidirectional", 9 = "bidirectional", 10 = "bidirectional", 11 = "power_in", 12 = "bidirectional", 13 = "bidirectional", 14 = "bidirectional", 15 = "bidirectional", 16 = "bidirectional", 17 = "bidirectional", 18 = "bidirectional", 19 = "bidirectional", 20 = "power_in", 21 = "input", 22 = "output", 23 = "power_in", 24 = "input", 25 = "bidirectional", 26 = "input", 27 = "bidirectional", 28 = "bidirectional", 29 = "bidirectional", 30 = "power_in", 31 = "bidirectional", 32 = "bidirectional", 33 = "bidirectional", 34 = "bidirectional", 35 = "bidirectional", 36 = "bidirectional", 37 = "bidirectional", 38 = "power_in", 39 = "power_in", 40 = "bidirectional", 41 = "bidirectional", 42 = "bidirectional", 43 = "bidirectional", 44 = "power_in", 45 = "power_in", 46 = "power_in", 47 = "power_in", 48 = "power_out", 49 = "power_in", 50 = "power_in", 51 = "bidirectional", 52 = "bidirectional", 53 = "power_in", 54 = "power_in", 55 = "bidirectional", 56 = "output", 57 = "bidirectional", 58 = "bidirectional", 59 = "bidirectional", 60 = "output", 61 = "power_in" }
+[part.L1]
+footprint = "pico-step:L_Abracon_AOTA-B201610"
+fields = { MPN = "AOTA-B201610S3R3-101-T", Manufacturer = "Abracon" }
+[part.Y1]
+footprint = "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm"
+fields = { MPN = "ABM8-272-T3", Manufacturer = "Abracon" }
+[part.SW1]
+footprint = "Button_Switch_SMD:SW_SPST_PTS810"
+[part.SW2]
+footprint = "Button_Switch_SMD:SW_SPST_PTS810"
+[part.J3]
+footprint = "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+[part.D1]
+symbol = "led"
+footprint = "LED_SMD:LED_0603_1608Metric"
++++
+
+
+
+                              U1A
+                +3V3          RP2354A                    +1V1
+                 |      +--------------------------+      |
+                 |      |                          |      |                                                                                             U1B
+                 *-----1|IOVDD              VREG_FB|50----*          +1V1                                                                               RP2354A
+                 *----11|IOVDD                 DVDD|6-----*           |                                                                               +------------------------+
+                 *----20|IOVDD                 DVDD|23----*           )  L1    +3V3                                                                   |                        |
+                 *----30|IOVDD                 DVDD|39----+           )  3.3u   |                               +-----------------------------------22|XOUT               GPIO0|2-x
+                 *----38|IOVDD                     |                  |         #  R27                          |                                     |                   GPIO1|3-x
+                 *----45|IOVDD              VREG_LX|48----------------+         #  33                           #  R5                                 |                   GPIO2|4----[TMC_SCK]
+                 *----44|ADC_AVDD                  |                            |                               #  1k   Y1                            |                   GPIO3|5----[TMC_SDI]
+                 *----53|USB_OTP_VDD      VREG_AVDD|46------------*-------------+                               |       12MHz                         |                   GPIO4|7----[TMC_SDO]
+                 *----54|QSPI_IOVDD                |              |                                             |   +-------+                         |                   GPIO5|8----[TMC_CSN]
+                 +----49|VREG_VIN                  |             === C17                                +-------*--3|       |1--------*-------------21|XIN                GPIO6|9----[TMC_REFL]
+                        |    GND      VREG_PGND    |              |  4.7u                               |           +-------+         |               |                   GPIO7|10---[TMC_REFR]
+                        +--------------------------+             GND                                   === C16       2|  4|          === C15          |                   GPIO8|12---[TMC_ENN]
+                            61|         47|                                                             |  15p        *---+           |  15p          |                   GPIO9|13---[TMC_DIAG0]
+                              *-----------+                                                            GND            |              GND              |                  GPIO10|14---[ENC_SCK]
+                              |                                                                                      GND                              |                  GPIO11|15---[ENC_TX]
+                             GND                                                                                                       +3V3           |                  GPIO12|16---[ENC_DATA]
+                                                                                                                                        |             |                  GPIO13|17---[ENC_CSQ]
+                                                                                                                                        #  R7         |                  GPIO14|18---[ENC_IFA]
+                                                                                                                                        #  10k        |                  GPIO15|19---[ENC_IFB]
+     +3V3                                                                                                                               |             |                  GPIO16|27---[ENC_IFC]
+      |                                                                                                                     +-----------*-----------26|RUN               GPIO17|28---[TMC_DIAG1]
+      +-----*----------*----------*----------*----------*----------*----------*----------*----------+                      1|                         |                  GPIO18|29---[TMC_SLEEPN]
+            |          |          |          |          |          |          |          |          |                    +-----+                      |                  GPIO19|31x                           D1
+           === C3     === C4     === C5     === C6     === C7     === C8     === C9     === C10    === C11               |     |  SW2                 |                  GPIO20|32x                     +----->|----+
+            |  100n    |  100n    |  100n    |  100n    |  100n    |  100n    |  100n    |  100n    |  4.7u              +-----+  RESET               |                  GPIO21|33x                     |     LED   |
+           GND        GND        GND        GND        GND        GND        GND        GND        GND                     2|                         |                  GPIO22|34x                     #  R8      GND
+                                                                                                                            |                         |                  GPIO23|35x                     #  330
+                                                                                                                           GND                        |                  GPIO24|36x                     |
+                                                                                                                                                      |                  GPIO25|37----------------------+
+     +1V1                                                                                                                           R6                |             GPIO26/ADC0|40---[VM_SENSE]
+      |                                                                                                                     +-------[==]------------60|QSPI_SS      GPIO27/ADC1|41x
+      +-----*----------*----------*----------+                                                                             1|       1k                |             GPIO28/ADC2|42x
+            |          |          |          |                                                                           +-----+                      |             GPIO29/ADC3|43x           J3
+           === C12    === C13    === C14    === C36                                                                      |     |  SW1                 |                        |              SWD
+            |  4.7u    |  100n    |  100n    |  4.7u                                                                     +-----+  BOOTSEL             |                        |              +-------+
+           GND        GND        GND        GND                                                                            2|                         |                   SWCLK|24-----------1|SWCLK  |
+                                                                                                                            |                         |                        |              |       |
+                                                                                                                           GND                        |                   SWDIO|25-----------3|SWDIO  |
+    RP2354A: an RP2350A with 2 MB flash stacked in the package on the QSPI bus; the QSPI data pins stay open.                                         |                        |              |  GND  |
+    C3..C8 decouple the six IOVDD pins, C9 USB_OTP_VDD and QSPI_IOVDD, C10 ADC_AVDD, C11 VREG_VIN.                                                    |                        |              +-------+
+    Core regulator per RP2350 data sheet 6.3.8: C12 is COUT, C36 sits at DVDD pin 23, C13 and C14 at pins 6 and 39.                                   |                        |                 2|
+    L1 is polarity marked: its dot (pin 1) goes on +1V1. VREG_AVDD is filtered by R27 and C17.                                                        |                  USB_DP|52---[USB_DP]     |
+                                                                                                                                                      |                  USB_DM|51---[USB_DM]    GND
+                                                                                                                                                      |                        |
+                                                                                                                                                      |                        |
+                                                                                                                                                      |               QSPI_SCLK|56x
+                                                                                                                                                      |                QSPI_SD0|57x
+                                                                                                                                                      |                QSPI_SD1|59x
+                                                                                                                                                      |                QSPI_SD2|58x
+                                                                                                                                                      |                QSPI_SD3|55x
+                                                                                                                                                      |                        |
+                                                                                                                                                      +------------------------+

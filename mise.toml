@@ -109,3 +109,23 @@ run = [
     "inkscape build/pcb-top.svg --export-type=png --export-filename=build/pcb-top.png --export-width=1500",
     "inkscape build/pcb-bottom.svg --export-type=png --export-filename=build/pcb-bottom.png --export-width=1500",
 ]
+
+[tasks.tsch-check]
+description = "Check the text-schematic drawing in tsch/ (TSCH points at the tsch binary)"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "$TSCH check tsch/project.toml"
+
+[tasks.tsch]
+description = "Build the tsch/ drawing into build/tsch/pico-step.kicad_sch and prove it with kicad-cli"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "$TSCH verify tsch/project.toml -o build/tsch"
+
+[tasks.tsch-parity]
+description = "List nets and parts that differ between pico-step.kicad_sch and the tsch/ drawing"
+depends = ["tsch"]
+run = "python tools/parity.py --tsch build/tsch/pico-step.kicad_sch"
+
+[tasks.tsch-render]
+description = "Render each tsch/ sheet to build/tsch/pico-step-<sheet>.png"
+env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
+run = "$TSCH render tsch/project.toml -o build/tsch"

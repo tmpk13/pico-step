@@ -1,0 +1,63 @@
++++
+title = "USB, 3.3 V and motor supply input"
+[default.R]
+footprint = "Resistor_SMD:R_0603_1608Metric"
+[default.C]
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+[part.J1]
+footprint = "pico-step:USB_C_Receptacle_GCT_USB4105-xx-A_16P_SH"
+fields = { MPN = "USB4105-GF-A", Manufacturer = "GCT" }
+pins = { A5 = "bidirectional", B5 = "bidirectional", A6 = "bidirectional", B6 = "bidirectional", A7 = "bidirectional", B7 = "bidirectional", A8 = "bidirectional", B8 = "bidirectional" }
+[part.U2]
+footprint = "Package_TO_SOT_SMD:SOT-23-5"
+fields = { MPN = "AP2112K-3.3TRG1", Manufacturer = "Diodes Incorporated" }
+pins = { 1 = "power_in", 2 = "power_in", 3 = "input", 4 = "no_connect", 5 = "power_out" }
+[part.C2]
+footprint = "Capacitor_SMD:C_0805_2012Metric"
+[part.C19]
+footprint = "Capacitor_SMD:CP_Elec_10x10.5"
+[part.J2]
+footprint = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
++++
+    J1
+    USB-C
+    +---------------------------------+
+    |                             VBUS|A4+                                                  U2
+    |                             VBUS|A9*                                                  AP2112K-3.3              +3V3
+    |                             VBUS|B4*                                                  +----------------+        |
+    |                             VBUS|B9*--------------------------------------*-------*--1|VIN         VOUT|5-------*
+    |                                 |                                         |       |   |                |        |
+    |                               D+|A6+      R3                             ===  C1  +--3|EN            NC|4x     ===  C2
+    |                               D+|B6*------[==]--------------[USB_DP]      |  1u       |      GND       |        |  10u
+    |                                 |         27                             GND          +----------------+       GND
+    |                               D-|A7+              R4                                         2|
+    |                               D-|B7*--------------[==]------[USB_DM]                          |
+    |                                 |                 27                                         GND
+    |                              CC1|A5-----------------+
+    |                              CC2|B5-----+           |
+    |                             SBU1|A8x    |           |
+    |                             SBU2|B8x    #  R2       #  R1
+    |   GND   GND   GND   GND  SHIELD |       #  5.1k     #  5.1k
+    +---------------------------------+       |           |
+       A1|  A12|   B1|  B12|   SH|           GND         GND
+         *-----*-----*-----*-----+
+         |
+        GND
+
+
+
+
+    J2              J2 is not joined to the driver VM yet: VM overvoltage handling is undecided.
+    VM
+    +-----+
+    |     |1--------*---------------+
+    |     |         |               |
+    |     |2--+     +               #  R12
+    +-----+   |    === C19          #  100k
+             GND    |  100u 63V     |
+                   GND              *-----------*-------[VM_SENSE]    48 V reads 2.55 V; the 3.3 V ADC full scale is 62 V.
+                                    |           |
+                                    #  R13     === C20
+                                    #  5.6k     |  100n
+                                    |          GND
+                                   GND
