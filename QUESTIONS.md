@@ -9,7 +9,7 @@ not carry.
   VM_SENSE crosses the stack.
 - B. All on the mcu board: VM must cross J5 to the driver at motor current.
 - C. All on the driver board: USB D+/D- and VBUS cross J5 to the MCU.
-Applied: A, in the commit that split the boards.
+Applied: A, in 6056377.
 Answer:
 
 ## Q2. What joins the stacked boards?
@@ -23,7 +23,7 @@ area the connector takes on a 42 mm NEMA17 outline.
 - C. Two connectors (mcu-driver, mcu-encoder): fewer pins each, but the
   middle board must pass the other board's lines through, so the stack
   order is fixed.
-Applied: A, in stack/stack.tsch. Still open with A: the stack order, which
+Applied: A, in 6056377 (stack/stack.tsch). Still open with A: the stack order, which
 picks each board's J5 part (pins, socket, or stacking socket) for the
 DigiKey list.
 Answer:
