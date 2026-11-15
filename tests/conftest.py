@@ -1,30 +1,54 @@
-"""The circuit as KiCad reads it from the project schematic.
+"""The circuit as KiCad reads it from each board's schematic.
 
-pico-step.kicad_sch and its sheets are built from the text drawing in
-tsch/ (mise run sch). The tests check the netlist kicad-cli exports from
-that file, which is exactly what the board is updated from.
+The project is a stack of boards. Each board folder (mcu, encoder,
+driver) holds tsch/project.toml, whose name gives the board's files:
+<folder>/<name>.kicad_sch, built from the folder's text drawing by mise run
+sch, and <folder>/<name>.kicad_pcb. The tests check the netlist kicad-cli
+exports from each schematic, which is exactly what the board is updated
+from.
 """
 
 from __future__ import annotations
 
+import re
 import subprocess
+import tomllib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+BOARDS = sorted(p.parent.parent.name for p in ROOT.glob("*/tsch/project.toml"))
+STACK_SHEET = ROOT / "stack" / "stack.tsch"
+# The one-board layout every board's .kicad_pcb started as a copy of.
+SINGLE_BOARD = ROOT / "pico-step.kicad_pcb"
 
 
-@pytest.fixture(scope="session")
-def schematic(tmp_path_factory) -> dict:
+def board_file(board: str, suffix: str) -> Path:
+    """<board>/<project name><suffix>, e.g. mcu/pico-step-mcu.kicad_pcb."""
+    manifest = tomllib.loads((ROOT / board / "tsch" / "project.toml").read_text())
+    return ROOT / board / f"{manifest['name']}{suffix}"
+
+
+def stack_refs() -> set[str]:
+    """References on the stack sheet, which every board carries."""
+    return set(re.findall(r"^\[part\.(\w+)\]", STACK_SHEET.read_text(), re.M))
+
+
+def uncut_copy(board: str) -> bool:
+    """True while the board is still a byte-for-byte copy of the one-board
+    layout: it then holds every part of the stack, not its own."""
+    path = board_file(board, ".kicad_pcb")
+    return SINGLE_BOARD.exists() and path.read_bytes() == SINGLE_BOARD.read_bytes()
+
+
+def load_netlist(sch: Path, xml: Path) -> dict:
     """components: ref, value, footprint per part. nets: name and pins
     ("U5.21") of every connected net. no_connect: pins marked unused.
     pin_names: "U5.21" -> "VS"."""
-    sch = ROOT / "pico-step.kicad_sch"
     if not sch.exists():
-        pytest.fail("pico-step.kicad_sch is missing: run mise run sch")
-    xml = tmp_path_factory.mktemp("netlist") / "net.xml"
+        pytest.fail(f"{sch.relative_to(ROOT)} is missing: run mise run sch")
     subprocess.run(
         ["kicad-cli", "sch", "export", "netlist", "--format", "kicadxml",
          "-o", str(xml), str(sch)],
@@ -64,3 +88,22 @@ def schematic(tmp_path_factory) -> dict:
             nets.append({"name": name, "pins": pins})
     return {"components": components, "nets": nets,
             "no_connect": no_connect, "pin_names": pin_names}
+
+
+@pytest.fixture(scope="session")
+def schematics(tmp_path_factory) -> dict[str, dict]:
+    """Board folder name -> its netlist (see load_netlist)."""
+    tmp = tmp_path_factory.mktemp("netlist")
+    return {b: load_netlist(board_file(b, ".kicad_sch"), tmp / f"{b}.xml")
+            for b in BOARDS}
+
+
+@pytest.fixture(params=BOARDS)
+def board(request) -> str:
+    return request.param
+
+
+@pytest.fixture
+def schematic(schematics, board) -> dict:
+    """The netlist of one board; tests using it run once per board."""
+    return schematics[board]

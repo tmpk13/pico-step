@@ -1,0 +1,3 @@
+name = "pico-step-driver"
+title = "pico-step driver board: TMC5241, motor supply"
+sheets = ["vm.tsch", "driver.tsch", "../../stack/stack.tsch"]

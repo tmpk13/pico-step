@@ -1,6 +1,5 @@
 +++
-power = ["VM_IN"]
-title = "USB, 3.3 V and motor supply input"
+title = "USB and 3.3 V supply"
 [default.R]
 footprint = "Resistor_SMD:R_0603_1608Metric"
 [default.C]
@@ -15,10 +14,6 @@ fields = { MPN = "AP2112K-3.3TRG1", Manufacturer = "Diodes Incorporated" }
 pins = { 1 = "power_in", 2 = "power_in", 3 = "input", 4 = "no_connect", 5 = "power_out" }
 [part.C2]
 footprint = "Capacitor_SMD:C_0805_2012Metric"
-[part.C19]
-footprint = "Capacitor_SMD:CP_Elec_10x10.5"
-[part.J2]
-footprint = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
 +++
     J1
     USB-C
@@ -44,21 +39,3 @@ footprint = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5
          *-----*-----*-----*-----+
          |
         GND
-
-
-                    J2 is not joined to the driver VM yet: VM overvoltage handling is undecided.
-
-    J2
-    VM                             VM_IN
-    +-----+                         |
-    |     |1--------*---------------*
-    |     |         |               |
-    |     |2--+     +               #  R12
-    +-----+   |    === C19          #  100k
-             GND    |  100u 63V     |
-                   GND              *-----------*-------[VM_SENSE]    48 V reads 2.55 V; the 3.3 V ADC full scale is 62 V.
-                                    |           |
-                                    #  R13     === C20
-                                    #  5.6k     |  100n
-                                    |          GND
-                                   GND

@@ -81,16 +81,25 @@ def test_generated_library_is_current():
         assert path.read_text() == fp.render(), f"rerun tools/footprints.py for {fp.name}"
 
 
+@pytest.fixture
+def u5_board(schematics) -> dict:
+    """The netlist of the one board that carries the TMC5241 (U5)."""
+    hits = [s for s in schematics.values()
+            if any(c["ref"] == "U5" for c in s["components"])]
+    assert len(hits) == 1, f"U5 is on {len(hits)} boards"
+    return hits[0]
+
+
 def u5_pin_names(schematic: dict) -> dict[int, str]:
     return {int(p.split(".")[1]): name for p, name in schematic["pin_names"].items()
             if p.startswith("U5.")}
 
 
-def test_tmc5241_symbol_has_every_pin_once(schematic):
-    assert sorted(u5_pin_names(schematic)) == list(range(1, 40))
+def test_tmc5241_symbol_has_every_pin_once(u5_board):
+    assert sorted(u5_pin_names(u5_board)) == list(range(1, 40))
 
 
-def test_tmc5241_pin_names_match_data_sheet(schematic):
+def test_tmc5241_pin_names_match_data_sheet(u5_board):
     # TMC5241 data sheet Rev. 0, Pin Descriptions and TQFN pin
     # configuration, "/" written as "_". 39 is the exposed pad (GND).
     expected = {
@@ -103,14 +112,14 @@ def test_tmc5241_pin_names_match_data_sheet(schematic):
         33: "nSLEEP", 34: "CSN_AD2", 35: "SCK_AD1", 36: "SDI_AD0",
         37: "SDO_NAO", 38: "CLK", 39: "EP",
     }
-    assert u5_pin_names(schematic) == expected
+    assert u5_pin_names(u5_board) == expected
 
 
-def test_tmc5241_support_circuit(schematic):
+def test_tmc5241_support_circuit(u5_board):
     """Supply, strap and output pins per the data sheet's Figure 50 and pin
     table: VS on the motor supply, VCC_IO on 3V3, VDD1V8 and IREF each to one
     part going to GND, SPI and internal clock straps low, OV unused."""
-    nets = {n["name"]: set(n["pins"]) for n in schematic["nets"]}
+    nets = {n["name"]: set(n["pins"]) for n in u5_board["nets"]}
 
     def net_of(pin):
         hits = [name for name, pins in nets.items() if pin in pins]
@@ -122,7 +131,7 @@ def test_tmc5241_support_circuit(schematic):
     # AGND, PGND, EP, UART_EN, CLK, AIN and the four N.C. pins.
     for p in (6, 23, 28, 39, 12, 38, 4, 19, 20, 31, 32):
         assert net_of(f"U5.{p}") == "GND", p
-    assert "U5.15" in schematic["no_connect"]
+    assert "U5.15" in u5_board["no_connect"]
     for pin in ("U5.5", "U5.3"):
         others = nets[net_of(pin)] - {pin}
         assert len(others) == 1

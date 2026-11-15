@@ -55,9 +55,36 @@ classDiagram
     MotorSupply_J2 --> RP2354A_U1 : VM_SENSE
 ```
 
-## Board floor plan
+## Board stack
 
-The TMC5241 stage is being placed again; this is the target arrangement.
+Three boards, each its own KiCad project, joined only by the J5 bus
+(2x12, 2.54 mm, the same pinout on every board, `stack/stack.tsch`).
+The stack order is open, so the diagram shows the bus, not an order.
+
+```mermaid
+flowchart LR
+    subgraph mcu ["mcu/ board"]
+        J1[J1 USB-C] --> U2[U2 AP2112K, +3V3]
+        U1[U1 RP2354A, Y1, SW1 SW2, J3 SWD, D1]
+    end
+    subgraph encoder ["encoder/ board"]
+        U3[U3 TLE5012B, R9-R11 R14]
+    end
+    subgraph driver ["driver/ board"]
+        J2[J2 VM in, C19] --> DIV[R12 R13 C20 VM_SENSE divider]
+        U5[U5 TMC5241] --> J4[J4 motor]
+    end
+    BUS{{"J5 bus: +3V3, GND, TMC SPI, REFL, REFR, ENN, SLEEPN, DIAG0, DIAG1, ENC SSC, IFA, IFB, IFC, VM_SENSE"}}
+    mcu --- BUS
+    encoder --- BUS
+    driver --- BUS
+```
+
+## One-board floor plan
+
+This is `pico-step.kicad_pcb`, the one-board layout each board folder's
+`.kicad_pcb` started as a copy of. The TMC5241 stage is being placed
+again; this is the target arrangement.
 
 ```mermaid
 flowchart TB

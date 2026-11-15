@@ -17,24 +17,32 @@ description = "Generate project footprints into lib/pico-step.pretty"
 run = "python tools/footprints.py"
 
 [tasks.sch]
-description = "Build tsch/ into pico-step.kicad_sch and its sheets, proven with kicad-cli (refuses to overwrite a schematic saved from KiCad)"
+description = "Build each board's tsch/ into its .kicad_sch files, proven with kicad-cli (refuses to overwrite a schematic saved from KiCad); pass board names to build only those"
 env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
 run = "python tools/tsch_sch.py"
 
 [tasks.sch-check]
-description = "Check the tsch/ drawing for format and connection errors without KiCad"
+description = "Check every board's tsch/ drawing for format and connection errors without KiCad"
 env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
-run = "$TSCH check tsch/project.toml"
+run = "for p in */tsch/project.toml; do $TSCH check $p || exit 1; done"
 
 [tasks.render]
-description = "Render each schematic sheet to build/tsch/pico-step-<sheet>.png"
+description = "Render each board's schematic sheets to build/tsch/<board>/*.png"
 env = { TSCH = "{{env.TSCH | default(value='tsch')}}" }
-run = "$TSCH render tsch/project.toml -o build/tsch"
+run = "for p in */tsch/project.toml; do $TSCH render $p -o build/tsch/${p%%/*} || exit 1; done"
 
 [tasks.erc]
-description = "Run KiCad ERC on the schematic with the project's rule severities"
+description = "Run KiCad ERC on each board's schematic with its project's rule severities"
 depends = ["sch"]
-run = "kicad-cli sch erc --severity-error --exit-code-violations -o build/erc.rpt pico-step.kicad_sch"
+# The board folder is the path before the first slash; the root schematic
+# is named after the project's name line in its project.toml.
+run = '''
+for p in */tsch/project.toml; do
+    b=${p%%/*}
+    n=$(sed -n 's/^name = "\(.*\)"$/\1/p' $p)
+    kicad-cli sch erc --severity-error --exit-code-violations -o build/erc-$b.rpt $b/$n.kicad_sch || exit 1
+done
+'''
 
 [tasks.test]
 description = "Run tests"
@@ -46,9 +54,10 @@ description = "Apply the placement table in tools/pcb_place.py to pico-step.kica
 run = "$KICAD_PYTHON tools/pcb_place.py"
 
 [tasks.pcb-sync]
-description = "Update the board from the schematic (footprints, values, fields, nets), keeping the placement"
+description = "Update one board (mise run pcb-sync mcu) from its schematic: footprints, values, fields, nets, keeping the placement"
 depends = ["sch"]
-run = "$KICAD_PYTHON tools/pcb_sync.py"
+usage = 'arg "<board>" help="Board folder: mcu, encoder or driver"'
+run = "$KICAD_PYTHON tools/pcb_sync.py {{usage.board}}"
 
 [tasks.pcb-fill]
 description = "Refill the copper zones of pico-step.kicad_pcb"

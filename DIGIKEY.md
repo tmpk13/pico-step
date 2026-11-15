@@ -2,7 +2,9 @@
 
 Import `digikey_list.csv` into a DigiKey list (Quantity, Part Number = MPN).
 Matching by MPN lets DigiKey offer cut tape for prototype quantities.
-35 lines, 63 parts per board; the quantities are per board.
+35 lines, 63 parts per stack (one mcu, one encoder and one driver board);
+the quantities are per stack. The J5 stack headers are not in it yet: their
+parts depend on the stack order (QUESTIONS.md).
 
 Notes:
 - Every line was checked on DigiKey on 2026-11-09 for a 5-board run: all
@@ -14,7 +16,7 @@ Notes:
   orientation, and the RP2350 regulator is sensitive to it.
 - U5 is TMC5241ATU+T, which DigiKey sells as cut tape (2314 in stock,
   $12.79 each at 1, $10.05 at 10). TMC5241ATU+ is the same part in trays.
-- C11 and C12 are 4.7u (GRM188R61E475KE11D), as in `tsch/mcu.tsch` and
+- C11 and C12 are 4.7u (GRM188R61E475KE11D), as in `mcu/tsch/mcu.tsch` and
   RP2350 data sheet 6.3.8.
 - Eight parts had no DigiKey stock in any packaging on 2026-11-09 and were
   replaced by same-package, same-rating parts:

@@ -1,3 +1,0 @@
-name = "pico-step"
-title = "pico-step closed-loop stepper driver"
-sheets = ["power.tsch", "mcu.tsch", "encoder.tsch", "driver.tsch"]

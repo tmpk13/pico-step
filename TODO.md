@@ -26,10 +26,19 @@
       2.5 ms wake, DRV_CONF current range 2 (3 A full scale with RREF 12k),
       GLOBALSCALER/IRUN for the chosen current, then DRV_ENN low. Never
       sleep or reset while the motor turns fast.
-- [ ] Settle two open schematic decisions in tsch/: J2/C19/R12 sit on
-      VM_IN, not yet joined to VM (note on the power sheet), and TMC5241
+- [ ] Settle two open schematic decisions in driver/tsch/: J2/C19/R12 sit
+      on VM_IN, not yet joined to VM (note on the vm sheet), and TMC5241
       DIAG0/DIAG1 reach only their pull-ups while MCU GPIO9/GPIO17 carry
-      unconnected TMC_DIAG0/TMC_DIAG1 labels (note on the driver sheet).
+      TMC_DIAG0/TMC_DIAG1 to J5 pins the driver board leaves unwired (note
+      on the driver sheet).
+- [ ] Cut each board copy (mcu/, encoder/, driver/) down to its own parts:
+      `mise run pcb-sync <board>` deletes the other boards' footprints and
+      parks J5, then outline, J5 position and mounting holes per board.
+      The stack order sets which board gets pins, a socket or a stacking
+      socket for J5 (QUESTIONS.md).
+- [ ] Point the pcb-* tasks other than pcb-sync (place, fill, dsn,
+      autoroute, ses, gnd, drc, render) at a board folder; they still work
+      on the one-board pico-step.kicad_pcb.
 - [ ] Decide whether to take KiCad 10's USB4105 footprint changes
       (`mise run footprints`, notes/circuit.md): shield pads become
       mechanical instead of heatsink; the board's J1 must then be updated.

@@ -1,0 +1,3 @@
+name = "pico-step-mcu"
+title = "pico-step MCU board: RP2354A, USB-C, 3.3 V"
+sheets = ["usb.tsch", "mcu.tsch", "../../stack/stack.tsch"]

@@ -1,0 +1,28 @@
++++
+title = "Stack bus header"
+[part.J5]
+footprint = "Connector_PinHeader_2.54mm:PinHeader_2x12_P2.54mm_Vertical"
++++
+                            +3V3
+                             |
+                       +-----*-----+
+                       |  +-----+  |
+                       +-1|     |2-+
+     +-------------------3|     |4--------------------+
+     |    [TMC_SCK]------5|     |6------[TMC_CSN]     |
+     |    [TMC_SDI]------7|     |8------[TMC_SDO]     |
+     |    [TMC_ENN]------9|     |10-----[TMC_SLEEPN]  |
+     |   [TMC_REFL]-----11|     |12-----[TMC_REFR]    |
+     |  [TMC_DIAG0]-----13|     |14-----[TMC_DIAG1]   |
+     *------------------15|     |16-------------------*
+     |    [ENC_SCK]-----17|     |18-----[ENC_CSQ]     |
+    GND  [ENC_DATA]-----19|     |20-----[ENC_TX]     GND
+          [ENC_IFA]-----21|     |22-----[ENC_IFB]
+          [ENC_IFC]-----23|     |24-----[VM_SENSE]
+                          +-----+
+                           J5
+                           Stack bus
+
+    Every board carries J5 with this pinout, so the boards stack in any order.
+    Header pins pass through each board: a board leaves the lines it does not use unwired.
+    Each SPI group sits next to a GND pair; 48 V never crosses the stack (VM_SENSE is the divided reading).

@@ -1,0 +1,3 @@
+name = "pico-step-encoder"
+title = "pico-step encoder board: TLE5012B angle sensor"
+sheets = ["encoder.tsch", "../../stack/stack.tsch"]

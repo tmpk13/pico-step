@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""Build the project schematic from the text drawing in tsch/.
+"""Build each board's schematic from its text drawing in <board>/tsch/.
 
-tsch, the text-schematic tool (TSCH names its binary, default "tsch"),
-builds tsch/project.toml into build/tsch and proves the result with
-kicad-cli: KiCad's netlist equals the drawn one, ERC has no errors and
-every text sits in the cells it was typed in. The root sheet, the sheets
-and the generated symbol library are then copied into the project root,
-where pico-step.kicad_pro and the board expect them. tsch's own
-.kicad_pro and sym-lib-table stay in build/tsch: the project's copies
-hold the design rules, net classes and ERC settings.
+The project is a stack of boards; every board folder holding
+tsch/project.toml is one. tsch, the text-schematic tool (TSCH names its
+binary, default "tsch"), builds a board's project.toml into
+build/tsch/<board> and proves the result with kicad-cli: KiCad's netlist
+equals the drawn one, ERC has no errors and every text sits in the cells
+it was typed in. The root sheet, the sheets and the generated symbol
+library are then copied into the board folder, where its .kicad_pro and
+board expect them. tsch's own .kicad_pro and sym-lib-table stay in the
+build folder: the board's copies hold the design rules, net classes and
+ERC settings.
 
 A schematic file that KiCad has saved since it was generated is not
 overwritten, because an edit made in the GUI is lost on the next build;
-it belongs in tsch/. --force overwrites it anyway.
+it belongs in the board's tsch/. --force overwrites it anyway.
 
-Run from the project root: python3 tools/tsch_sch.py [--force]
+Run from the project root: python3 tools/tsch_sch.py [BOARD ...] [--force]
+(no BOARD builds every board).
 """
 
 from __future__ import annotations
@@ -28,16 +31,31 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROJECT = ROOT / "tsch" / "project.toml"
 BUILD = ROOT / "build" / "tsch"
 LIBRARY = "tsch.kicad_sym"
 
 
-def outputs() -> list[str]:
-    """Files to copy: root sheet, one schematic per drawn sheet, symbols."""
-    project = tomllib.loads(PROJECT.read_text())
-    sheets = [Path(s).with_suffix(".kicad_sch").name for s in project["sheets"]]
-    return [f"{project['name']}.kicad_sch", *sheets, LIBRARY]
+def boards() -> list[str]:
+    """Board folder names: every top-level folder with tsch/project.toml."""
+    return sorted(p.parent.parent.name for p in ROOT.glob("*/tsch/project.toml"))
+
+
+def project(board: str) -> Path:
+    return ROOT / board / "tsch" / "project.toml"
+
+
+def outputs(board: str) -> list[str]:
+    """Files to copy: root sheet, one schematic per drawn sheet, symbols.
+
+    A one-sheet project has no separate sheet file: the drawing is the
+    root sheet itself.
+    """
+    manifest = tomllib.loads(project(board).read_text())
+    root = f"{manifest['name']}.kicad_sch"
+    if len(manifest["sheets"]) == 1:
+        return [root, LIBRARY]
+    sheets = [Path(s).with_suffix(".kicad_sch").name for s in manifest["sheets"]]
+    return [root, *sheets, LIBRARY]
 
 
 def generator(path: Path) -> str:
@@ -46,26 +64,37 @@ def generator(path: Path) -> str:
     return m.group(1) if m else ""
 
 
-def saved_by_kicad(name: str) -> bool:
+def saved_by_kicad(board: str, name: str) -> bool:
     """True when copying NAME would overwrite a schematic edited in KiCad."""
-    target = ROOT / name
+    target = ROOT / board / name
     return (name.endswith(".kicad_sch") and target.exists()
             and generator(target) != "tsch"
-            and target.read_bytes() != (BUILD / name).read_bytes())
+            and target.read_bytes() != (BUILD / board / name).read_bytes())
 
 
 def main(argv: list[str]) -> int:
     tsch = os.environ.get("TSCH", "tsch")
-    subprocess.run([tsch, "verify", str(PROJECT), "-o", str(BUILD)], check=True)
-    names = outputs()
-    edited = [n for n in names if saved_by_kicad(n)]
+    known = boards()
+    chosen = [a for a in argv if not a.startswith("--")] or known
+    unknown = [b for b in chosen if b not in known]
+    if unknown:
+        print(f"no board {', '.join(unknown)}; boards: {', '.join(known)}")
+        return 1
+    for board in chosen:
+        subprocess.run([tsch, "verify", str(project(board)), "-o", str(BUILD / board)],
+                       check=True)
+    edited = [f"{b}/{n}" for b in chosen for n in outputs(b) if saved_by_kicad(b, n)]
     if edited and "--force" not in argv:
         print(f"not overwriting {', '.join(edited)}: saved by KiCad since it was "
-              "generated. Move the change into tsch/, or pass --force to drop it.")
+              "generated. Move the change into the board's tsch/, or pass --force "
+              "to drop it.")
         return 1
-    for name in names:
-        shutil.copyfile(BUILD / name, ROOT / name)
-    print(f"copied {', '.join(names)} from {BUILD.relative_to(ROOT)}")
+    for board in chosen:
+        names = outputs(board)
+        for name in names:
+            shutil.copyfile(BUILD / board / name, ROOT / board / name)
+        print(f"{board}: copied {', '.join(names)} from "
+              f"{(BUILD / board).relative_to(ROOT)}")
     return 0
 
 

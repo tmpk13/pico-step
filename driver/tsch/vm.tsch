@@ -1,0 +1,28 @@
++++
+power = ["VM_IN"]
+title = "Motor supply input"
+[default.R]
+footprint = "Resistor_SMD:R_0603_1608Metric"
+[default.C]
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+[part.C19]
+footprint = "Capacitor_SMD:CP_Elec_10x10.5"
+[part.J2]
+footprint = "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
++++
+                    J2 is not joined to VM on the driver sheet yet: VM overvoltage handling is undecided.
+
+    J2
+    VM                             VM_IN
+    +-----+                         |
+    |     |1--------*---------------*
+    |     |         |               |
+    |     |2--+     +               #  R12
+    +-----+   |    === C19          #  100k
+             GND    |  100u 63V     |
+                   GND              *-----------*-------[VM_SENSE]    48 V reads 2.55 V; the 3.3 V ADC full scale is 62 V.
+                                    |           |
+                                    #  R13     === C20
+                                    #  5.6k     |  100n
+                                    |          GND
+                                   GND

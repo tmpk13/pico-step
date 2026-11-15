@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Update pico-step.kicad_pcb from the schematic, keeping the placement.
+"""Update one board of the stack from its schematic, keeping the placement.
 
-Does what "Update PCB from Schematic" does for this board, from the
+Does what "Update PCB from Schematic" does for a board, from the
 command line: footprints whose symbol is gone are deleted, a footprint
 whose library id changed is swapped in at the same position, side and
 rotation, values, symbol fields and symbol links (paths) follow the
@@ -9,7 +9,11 @@ schematic, and every pad gets the net the schematic gives its pin. Tracks
 and vias on a net the schematic no longer has are deleted. New parts are
 parked in a row below the board for placement by hand.
 
-Run from the project root with KiCad's Python: python3 tools/pcb_sync.py
+The board is named by its folder (mcu, encoder, driver); the folder's
+tsch/project.toml names its files: <folder>/<name>.kicad_pcb and
+<name>.kicad_sch.
+
+Run from the project root with KiCad's Python: python3 tools/pcb_sync.py BOARD
 """
 
 from __future__ import annotations
@@ -18,13 +22,12 @@ import re
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 
 import pcbnew
 
 ROOT = Path(__file__).resolve().parent.parent
-BOARD = ROOT / "pico-step.kicad_pcb"
-SCH = ROOT / "pico-step.kicad_sch"
 STOCK_FP_DIR = Path("/usr/share/kicad/footprints")
 PARK = (80.0, 130.0)
 
@@ -54,7 +57,13 @@ def atom(node: list, name: str) -> str:
     return found[0][1] if found and len(found[0]) > 1 else ""
 
 
-def netlist() -> tuple[dict[str, dict], dict[tuple[str, str], str]]:
+def board_files(folder: Path) -> tuple[Path, Path]:
+    """The board and root schematic of a board folder."""
+    name = tomllib.loads((folder / "tsch" / "project.toml").read_text())["name"]
+    return folder / f"{name}.kicad_pcb", folder / f"{name}.kicad_sch"
+
+
+def netlist(sch: Path) -> tuple[dict[str, dict], dict[tuple[str, str], str]]:
     # The s-expression netlist keeps KiCad's escapes ("{slash}" in generated
     # net names); the XML one unescapes them, and pads given those names no
     # longer match the schematic.
@@ -62,7 +71,7 @@ def netlist() -> tuple[dict[str, dict], dict[tuple[str, str], str]]:
         out = Path(tmp) / "net.net"
         subprocess.run(
             ["kicad-cli", "sch", "export", "netlist", "--format", "kicadsexpr",
-             "-o", str(out), str(SCH)],
+             "-o", str(out), str(sch)],
             check=True, capture_output=True,
         )
         tree = sexpr(out.read_text())
@@ -87,35 +96,39 @@ def netlist() -> tuple[dict[str, dict], dict[tuple[str, str], str]]:
     return comps, pins
 
 
-def lib_path(nickname: str) -> str:
-    table = (ROOT / "fp-lib-table").read_text()
+def lib_path(folder: Path, nickname: str) -> str:
+    table = (folder / "fp-lib-table").read_text()
     m = re.search(r'\(name "?' + re.escape(nickname) + r'"?\)\s*\(type [^)]*\)\s*\(uri "?([^")]+)"?\)', table)
     if m:
-        return m.group(1).replace("${KIPRJMOD}", str(ROOT))
+        return str(Path(m.group(1).replace("${KIPRJMOD}", str(folder))).resolve())
     return str(STOCK_FP_DIR / f"{nickname}.pretty")
 
 
-def load_footprint(fpid: str) -> pcbnew.FOOTPRINT:
+def load_footprint(folder: Path, fpid: str) -> pcbnew.FOOTPRINT:
     lib, name = fpid.split(":", 1)
     # pcbnew.FootprintLoad goes through a plugin lookup that KiCad 10's
     # bindings return as an uncast SwigPyObject; the plugin class works.
-    fp = pcbnew.PCB_IO_KICAD_SEXPR().FootprintLoad(lib_path(lib), name)
+    fp = pcbnew.PCB_IO_KICAD_SEXPR().FootprintLoad(lib_path(folder, lib), name)
     if fp is None:
         sys.exit(f"footprint {fpid} not found")
     fp.SetFPIDAsString(fpid)
     return fp
 
 
-def main() -> int:
-    comps, pins = netlist()
-    board = pcbnew.LoadBoard(str(BOARD))
+def main(argv: list[str]) -> int:
+    if len(argv) != 1 or not (ROOT / argv[0] / "tsch" / "project.toml").exists():
+        sys.exit("usage: pcb_sync.py BOARD (a folder with tsch/project.toml)")
+    folder = ROOT / argv[0]
+    board_path, sch = board_files(folder)
+    comps, pins = netlist(sch)
+    board = pcbnew.LoadBoard(str(board_path))
 
     # Every BOARD.Remove() waits until the end: in KiCad 10's bindings, once
     # one has run, footprint loads and BOARD.GetFootprints() come back as
     # uncast SwigPyObjects.
     existing = list(board.GetFootprints())
     current = {fp.GetReference(): fp.GetFPIDAsString() for fp in existing}
-    loaded = {ref: load_footprint(c["footprint"]) for ref, c in comps.items()
+    loaded = {ref: load_footprint(folder, c["footprint"]) for ref, c in comps.items()
               if current.get(ref) != c["footprint"]}
     doomed = []
     placed = {}
@@ -182,10 +195,10 @@ def main() -> int:
 
     for item in doomed:
         board.Remove(item)
-    pcbnew.SaveBoard(str(BOARD), board)
+    pcbnew.SaveBoard(str(board_path), board)
     print(f"{len(comps)} footprints, {len(alive)} nets")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
