@@ -3,8 +3,8 @@
 Import `digikey_list.csv` into a DigiKey list (Quantity, Part Number = MPN).
 Matching by MPN lets DigiKey offer cut tape for prototype quantities.
 35 lines, 63 parts per stack (one mcu, one encoder and one driver board);
-the quantities are per stack. The J5 stack headers are not in it yet: their
-parts depend on the stack order (QUESTIONS.md).
+the quantities are per stack. The J5 and J6 stack headers are not in it
+yet: their parts depend on the stack order (QUESTIONS.md).
 
 Notes:
 - Every line was checked on DigiKey on 2026-11-09 for a 5-board run: all

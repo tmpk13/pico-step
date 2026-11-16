@@ -6,8 +6,9 @@ USB-C powered logic, separate motor supply (VM) up to 48 V.
 
 The design is a stack of three boards, each a KiCad project in its own
 folder: `mcu/` (RP2354A, USB-C, 3.3 V), `encoder/` (TLE5012B) and
-`driver/` (TMC5241, motor supply input). They join through one 2x12 bus
-header, J5, drawn once in `stack/stack.tsch` and carried by every board.
+`driver/` (TMC5241, motor supply input). They join through two 2x06
+headers, J5 and J6, drawn once in `stack/stack.tsch` and carried by every
+board.
 Each board's schematic is drawn as text in `<board>/tsch/` for the
 text-schematic tool `tsch` (set `TSCH` to its binary when it is not on the
 PATH); `mise run sch` builds them into `<board>/*.kicad_sch`, which are

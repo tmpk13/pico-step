@@ -12,18 +12,14 @@ not carry.
 Applied: A, in 6056377.
 Answer:
 
-## Q2. What joins the stacked boards?
-Why it matters: it fixes the pinout every board routes to and the board
-area the connector takes on a 42 mm NEMA17 outline.
-- A. One 2x12 2.54 mm bus (recommended): J5 with the same pinout on every
-  board, so any stack order works and boards can also be cabled with IDC
-  ribbon; 30.5 mm long.
-- B. One 2x12 1.27 mm bus: the same pinout in 15.2 mm, but stacking parts
-  are scarcer and harder to hand-solder.
-- C. Two connectors (mcu-driver, mcu-encoder): fewer pins each, but the
-  middle board must pass the other board's lines through, so the stack
-  order is fixed.
-Applied: A, in 6056377 (stack/stack.tsch). Still open with A: the stack order, which
-picks each board's J5 part (pins, socket, or stacking socket) for the
-DigiKey list.
+## Q3. In which order do the boards stack, from the motor up?
+Why it matters: it picks each board's J5 and J6 parts (pins, socket or
+stacking socket) for the DigiKey list. The encoder board sits next to the
+shaft magnet in every order.
+- A. Encoder, driver, mcu (recommended): the motor leads and the 48 V
+  input stay low, near the motor; USB-C, the buttons and the LED stay on
+  top, within reach.
+- B. Encoder, mcu, driver: the TMC5241 sheds heat into open air on top,
+  but USB-C ends up in the middle of the stack.
+Applied: not yet; no header parts are chosen, so nothing depends on it.
 Answer:

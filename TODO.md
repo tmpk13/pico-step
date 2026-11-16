@@ -33,9 +33,13 @@
       on the driver sheet).
 - [ ] Cut each board copy (mcu/, encoder/, driver/) down to its own parts:
       `mise run pcb-sync <board>` deletes the other boards' footprints and
-      parks J5, then outline, J5 position and mounting holes per board.
-      The stack order sets which board gets pins, a socket or a stacking
-      socket for J5 (QUESTIONS.md).
+      parks new parts, then outline, J5/J6 at the driver board's positions
+      and mounting holes per board. The stack order sets which board gets
+      pins, a socket or a stacking socket for J5/J6 (QUESTIONS.md).
+- [ ] mcu board: move TMC_SLEEPN to GPIO0 and TMC_CSN to GPIO1 (SPI0 CSn)
+      so U1's pins 2-10 leave in J6's order (notes/schematic.md, Stack
+      headers); give DIAG0/DIAG1, ENN and IFA/IFB/IFC their GPIOs when U1
+      is placed.
 - [ ] Point the pcb-* tasks other than pcb-sync (place, fill, dsn,
       autoroute, ses, gnd, drc, render) at a board folder; they still work
       on the one-board pico-step.kicad_pcb.

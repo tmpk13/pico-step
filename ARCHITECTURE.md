@@ -57,8 +57,9 @@ classDiagram
 
 ## Board stack
 
-Three boards, each its own KiCad project, joined only by the J5 bus
-(2x12, 2.54 mm, the same pinout on every board, `stack/stack.tsch`).
+Three boards, each its own KiCad project, joined only by the J5 and J6
+headers (2x06, 2.54 mm each, the same pinout on every board,
+`stack/stack.tsch`).
 The stack order is open, so the diagram shows the bus, not an order.
 
 ```mermaid
@@ -74,10 +75,14 @@ flowchart LR
         J2[J2 VM in, C19] --> DIV[R12 R13 C20 VM_SENSE divider]
         U5[U5 TMC5241] --> J4[J4 motor]
     end
-    BUS{{"J5 bus: +3V3, GND, TMC SPI, REFL, REFR, ENN, SLEEPN, DIAG0, DIAG1, ENC SSC, IFA, IFB, IFC, VM_SENSE"}}
-    mcu --- BUS
-    encoder --- BUS
-    driver --- BUS
+    J5{{"J5: +3V3, GND, ENC SSC, IFA, IFB, IFC, ENN, DIAG0, DIAG1"}}
+    J6{{"J6: GND, TMC SPI, SLEEPN, REFL, REFR, VM_SENSE"}}
+    mcu --- J5
+    encoder --- J5
+    driver --- J5
+    mcu --- J6
+    encoder --- J6
+    driver --- J6
 ```
 
 ## One-board floor plan

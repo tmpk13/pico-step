@@ -33,20 +33,20 @@ The one-board schematic was split into three stacked boards; commit
   the mcu board (`usb.tsch`), J2, C19 and the VM_SENSE divider to the
   driver board (`vm.tsch`), so 48 V never crosses the stack; VM_SENSE
   crosses already divided.
-- One bus header, J5 (2x12, 2.54 mm), on every board, drawn once in
-  `stack/stack.tsch`, which each board's project lists as a sheet. The
-  same pinout on every board lets the boards stack in any order and keeps
-  one home for the pinout. Its pins pass through each board, so a board
-  leaves the lines it does not use unwired.
+- The stack headers, J5 and J6 (see Stack headers), are on every board,
+  drawn once in `stack/stack.tsch`, which each board's project lists as a
+  sheet. The same pinout on every board lets the boards stack in any order
+  and keeps one home for the pinout. Their pins pass through each board,
+  so a board leaves the lines it does not use unwired.
 - tsch therefore warns W182 (global label appears once) on the encoder
   board for the 10 TMC lines and VM_SENSE, and on the driver board for the
   4 encoder SSC lines and TMC_DIAG0/1. These are the expected unused bus
   lines; a W182 for any other name is a real missing connection.
 - Each board is its own KiCad project, so a label of the same name on two
-  boards is two nets until both reach J5; neither tsch nor ERC sees across
-  projects. `tests/test_stack.py` checks it.
-- References stay unique across the stack (J5 excepted), so one order
-  list serves all three boards.
+  boards is two nets until both reach a stack header; neither tsch nor ERC
+  sees across projects. `tests/test_stack.py` checks it.
+- References stay unique across the stack (J5 and J6 excepted), so one
+  order list serves all three boards.
 - A board's `.kicad_pro` is a copy of the one-board project with its
   `meta.filename`, `schematic.top_level_sheets` and `sheets` pointed at
   the board's root sheet: KiCad 10 opens the root sheet that
@@ -54,6 +54,43 @@ The one-board schematic was split into three stacked boards; commit
 - The board-against-schematic tests (`test_board.py`, the board half of
   `test_refs.py`) skip a board while its `.kicad_pcb` is byte-identical to
   `pico-step.kicad_pcb`, and run as soon as it is edited.
+
+## Stack headers (2026-11-15)
+Two 2x06 2.54 mm headers replaced the 2x12 J5. J5 sits at the top edge
+and J6 at the bottom edge, both at 90 degrees with pin 1 on the left, so
+J5's odd row and J6's even row face the board center. Every board keeps
+that position and rotation; `tests/test_stack.py` checks both on every
+board that is no longer an uncut copy.
+
+The driver board sets the pinout. U5 sits at 180 degrees so its VS and
+OUT side faces left; that puts SLEEPN, CSN, SCK, SDI and SDO (pins 33-37)
+on its bottom edge toward J6, REFL and REFR (1-2) at the lower right,
+IFC, IFB, IFA and ENN (8-11) at the upper right, and DIAG0 and DIAG1
+(13-14) on the top edge toward J5. So J6 carries the TMC SPI, SLEEPN,
+REFL, REFR and VM_SENSE (its divider sits at the lower left), and J5 the
+rest. The first split, made in the GUI by halving the old pinout, had the
+TMC SPI on J5, which would loop every SPI line around U5.
+
+- Signals take the inner row and GND the outer row where they can. An
+  outer-row signal reaches its pin through the gap between two inner pins
+  (0.84 mm between 1.7 mm pads, room for one trace).
+- Each group sits in the order its chip's pins leave, so the fan-out
+  needs no crossing. Read from the board center (inner pins and the gaps
+  between them, left to right), J6 gives VM_SENSE, SLEEPN, CSN, SCK, SDI,
+  SDO, REFL, REFR, and J5 gives ENC_SCK, ENC_TX, ENC_DATA, ENC_CSQ, +3V3,
+  DIAG1, DIAG0, ENN, IFA, IFB, IFC.
+- Each SPI clock has GND directly behind it (J5.2, J6.5); REFL and REFR
+  (step and direction) have GND behind them too. VM_SENSE sits at J6's
+  end beside the static SLEEPN, with GND behind it.
+- Five GND pins and one +3V3 (was four and two): the +3V3 load across the
+  stack is the TLE5012B and the TMC5241 logic, tens of mA. J5 has a single
+  GND because its 10 signals leave no spare pin; moving R14 (ENC_TX into
+  ENC_DATA) to the mcu board would drop ENC_TX from the stack and free one.
+- ENC_SCK, ENC_TX, ENC_DATA, ENC_CSQ follow the RP2354A's SPI1 pins
+  GPIO10-13 in order. J6 matches U1's pins 2-10 in order once TMC_SLEEPN
+  moves to GPIO0 and TMC_CSN to GPIO1 (an SPI0 CSn pin); both are free
+  (TODO.md). The mcu board is not placed yet, so the other MCU lines get
+  their GPIOs when U1 is.
 
 ## Drawing decisions
 - Sheets per board: mcu (usb, mcu, stack), encoder (encoder, stack),

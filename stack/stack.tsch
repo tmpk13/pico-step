@@ -1,28 +1,28 @@
 +++
-title = "Stack bus header"
+title = "Stack bus headers"
 [part.J5]
-footprint = "Connector_PinHeader_2.54mm:PinHeader_2x12_P2.54mm_Vertical"
+footprint = "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical"
+[part.J6]
+footprint = "Connector_PinHeader_2.54mm:PinHeader_2x06_P2.54mm_Vertical"
 +++
-                            +3V3
-                             |
-                       +-----*-----+
-                       |  +-----+  |
-                       +-1|     |2-+
-     +-------------------3|     |4--------------------+
-     |    [TMC_SCK]------5|     |6------[TMC_CSN]     |
-     |    [TMC_SDI]------7|     |8------[TMC_SDO]     |
-     |    [TMC_ENN]------9|     |10-----[TMC_SLEEPN]  |
-     |   [TMC_REFL]-----11|     |12-----[TMC_REFR]    |
-     |  [TMC_DIAG0]-----13|     |14-----[TMC_DIAG1]   |
-     *------------------15|     |16-------------------*
-     |    [ENC_SCK]-----17|     |18-----[ENC_CSQ]     |
-    GND  [ENC_DATA]-----19|     |20-----[ENC_TX]     GND
-          [ENC_IFA]-----21|     |22-----[ENC_IFB]
-          [ENC_IFC]-----23|     |24-----[VM_SENSE]
-                          +-----+
-                           J5
-                           Stack bus
+                                       +3V3
+   +--------------------------+         |
+   |                +-----+   |         |                         +-----+
+   |    [ENC_SCK]--1|     |2--+         |          +-------------1|     |2--[VM_SENSE]
+   |   [ENC_DATA]--3|     |4--[ENC_TX]  |          |  [TMC_CSN]--3|     |4--[TMC_SLEEPN]
+   |    [ENC_CSQ]--5|     |6------------+          *-------------5|     |6--[TMC_SCK]
+   |  [TMC_DIAG1]--7|     |8--[TMC_DIAG0]          |  [TMC_SDO]--7|     |8--[TMC_SDI]
+   |    [TMC_ENN]--9|     |10-[ENC_IFA]            *-------------9|     |10-[TMC_REFL]
+   |    [ENC_IFB]-11|     |12-[ENC_IFC]            *------------11|     |12-[TMC_REFR]
+   |                +-----+                        |              +-----+
+   |                 J5                            |               J6
+  GND                Stack 2x06                   GND              Stack 2x06
 
-    Every board carries J5 with this pinout, so the boards stack in any order.
+
+    Every board carries J5 and J6 at the same place and rotation, so the boards stack in any order.
+    Seen from the top: J5 at the top edge, odd row toward the board center; J6 at the bottom edge, even row toward it; pin 1 left.
+    Signals take the inner rows where they can, GND the outer rows. Each group sits in the order its chip's pins leave toward it,
+    so the fan-outs need no crossings: TMC SPI, SLEEPN, REFL and REFR leave the TMC5241's bottom edge toward J6;
+    DIAG0, DIAG1, ENN and the encoder lines go to J5. One +3V3 pin carries the encoder and the TMC5241 logic (tens of mA).
     Header pins pass through each board: a board leaves the lines it does not use unwired.
-    Each SPI group sits next to a GND pair; 48 V never crosses the stack (VM_SENSE is the divided reading).
+    48 V never crosses the stack (VM_SENSE is the divided reading).
