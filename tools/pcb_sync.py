@@ -80,14 +80,19 @@ def netlist(sch: Path) -> tuple[dict[str, dict], dict[tuple[str, str], str]]:
         fields = {}
         for fs in children(c, "fields"):
             for f in children(fs, "field"):
-                if len(f) > 2 and f[2]:
-                    fields[atom(f, "name")] = f[2]
+                name = atom(f, "name")
+                value = f[2] if len(f) > 2 else ""
+                # Every symbol and footprint has a Datasheet and a
+                # Description, so an empty one is copied too: a footprint
+                # placed in the GUI from a KiCad library symbol otherwise
+                # keeps that symbol's text and fails schematic parity.
+                if value or name in ("Datasheet", "Description"):
+                    fields[name] = value
         comps[atom(c, "ref")] = {
             "value": atom(c, "value"),
             "footprint": atom(c, "footprint"),
             "path": atom(children(c, "sheetpath")[0], "tstamps") + atom(c, "tstamps"),
-            "fields": {k: v for k, v in fields.items()
-                       if k not in ("Footprint", "Datasheet", "Description")},
+            "fields": {k: v for k, v in fields.items() if k != "Footprint"},
         }
     pins = {}
     for net in children(children(tree, "nets")[0], "net"):
